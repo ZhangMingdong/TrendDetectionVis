@@ -13,7 +13,6 @@
 
 
 #include "MainWindow.h"
-#include "MyMapWidget.h"
 #include "MyChartWidget.h"
 #include "MeteModel.h"
 
