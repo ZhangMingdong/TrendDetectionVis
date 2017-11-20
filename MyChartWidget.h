@@ -5,7 +5,6 @@
 #include "ContourGenerator.h"
 #include "EnsembleIntersections.h"
 #include "GLFont.h"
-#include "UnCertaintyArea.h"
 #include "MeteLayer.h"
 
 #include "MyGLWidget.h"
@@ -36,8 +35,6 @@ protected:
 	virtual void paint();
 	virtual void init();
 protected:
-	// generate sequences for trend detection
-	void generateSequences();
 
 	// draw all the groups
 	void drawGroups();
@@ -50,5 +47,14 @@ protected:
 	void drawDBGroups();
 	// draw the selected groups
 	void drawSelectedDBGroup();
+
+	// generate sequences for trend detection -- ensembles
+	void generateSequences();
+
+	// genereate sequences from the data -- GDPs
+	void generateSequences(std::vector<std::vector<double>> vecData);
+
+	// generate artificial data
+	void generateSequenceArtificial();
 };
 

@@ -175,7 +175,7 @@ void MeteModel::InitModel(int nEnsembleLen, int nWidth, int nHeight, int nFocusX
 	// 4.statistic
 	_pData->DoStatistic();
 
-
+	return;
 	// ensemble clustering
 	doEnsCluster();
 
