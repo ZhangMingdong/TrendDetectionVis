@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include "INIReader.h"
+using namespace std;
 
 double g_fThreshold = 273.16 - 15;
 bool g_bGlobalArea = false;
@@ -31,48 +32,33 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-//	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-72.ini";
-//	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-96.ini";
-//	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-120.ini";
-//	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-144.ini";
-//	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-168.ini";
-//	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-192.ini";
-	const char* strConfigFileName = "../../data/config/t2-mod-ecmwf-20160105-00-216.ini";
-//	const char* strConfigFileName = "../../data/config/pre_20171016_0-360-by-6.ini";
-	// read config file
-	INIReader reader(strConfigFileName);
 
-	if (reader.ParseError() < 0) {
-		std::cout << "Can't load '"<< strConfigFileName <<"'\n";
-		return 1;
-	}
-	g_bGlobalArea = reader.GetBoolean("region", "global",true);
-	g_usedModel = (enumMeteModel)reader.GetInteger("model", "model", -1);
-	g_fThreshold = reader.GetReal("value", "threshold", -1);
-	g_arrIsoValues[0] = reader.GetReal("value", "i1", 0);
-	g_arrIsoValues[1] = reader.GetReal("value", "i2", 0);
-	g_arrIsoValues[2] = reader.GetReal("value", "i3", 0);
-	g_arrIsoValues[3] = reader.GetReal("value", "i4", 0);
-	g_arrIsoValues[4] = reader.GetReal("value", "i5", 0);
-	g_arrIsoValues[5] = reader.GetReal("value", "i6", 0);
+	g_bGlobalArea = false;
+	g_usedModel = T2_ECMWF;
+	g_fThreshold = 273.16;
+	g_arrIsoValues[0] = 253.16;
+	g_arrIsoValues[1] = 263.16;
+	g_arrIsoValues[2] = 273.16;
+	g_arrIsoValues[3] = 283.16;
+	g_arrIsoValues[4] = 293.16;
+	g_arrIsoValues[5] = 303.16;
 
 
-	g_nWidth = reader.GetInteger("region", "width", 0);
-	g_nHeight = reader.GetInteger("region", "height", 0);
-	g_nFocusX = reader.GetInteger("region", "focusx", 0);
-	g_nFocusY = reader.GetInteger("region", "focusy", 0);
-	g_nFocusW = reader.GetInteger("region", "focusw", 0);
-	g_nFocusH = reader.GetInteger("region", "focush", 0);
-	g_nWest = reader.GetInteger("region", "west", 0);
-	g_nEast = reader.GetInteger("region", "east", 0);
-	g_nNorth = reader.GetInteger("region", "north", 0);
-	g_nSouth = reader.GetInteger("region", "south", 0);
-	strcpy(g_strFileName, reader.Get("file", "name", "").c_str());
+	g_nWidth = 91;
+	g_nHeight = 51;
+	g_nFocusX = 0;
+	g_nFocusY = 0;
+	g_nFocusW = 91;
+	g_nFocusH = 51;
+	g_nWest = 60;
+	g_nEast = 150;
+	g_nNorth = 60;
+	g_nSouth = 10;
+	strcpy(g_strFileName, "../../data/t2-mod-ecmwf-20160105-00-216.txt");
+	strcpy(g_strObsFileName, "../../data/t2_obs_1979-2017_1_china.txt");
+	g_nBiasY = 37;
+	g_nBiasD = 13;
 
-
-	strcpy(g_strObsFileName, reader.Get("obs", "file", "").c_str());
-	g_nBiasY = reader.GetInteger("obs", "biasy", 0);
-	g_nBiasD = reader.GetInteger("obs", "biasd", 0);
 
 	app.setApplicationName(app.translate("main", "EnsembleVis"));
 	app.setOrganizationName("CG&CAD");

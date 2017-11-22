@@ -5,7 +5,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "MyPCA.h"
+
 
 DataField::DataField(int w, int h, int l):_nW(w),_nH(h),_nL(l)
 {
@@ -273,35 +273,4 @@ void DataField::smoothVar(int nSmooth) {
 
 }
 
-
-void DataField::DoEOF() {
-	// 1.set parameter
-	int mI = _nL;
-	int mO = g_nEOFLen;
-	int n = _nW*_nH;
-	// 2.allocate input and output buffer
-	double* arrInput = new double[mI*n];
-	double* arrOutput = new double[mO*n];
-	for (size_t i = 0; i < n; i++)
-	{
-		for (size_t j = 0; j < mI; j++) 
-		{
-			arrInput[i*mI + j] = GetData(j, i);
-		}
-	}
-	// 3.pca
-	MyPCA pca;
-	pca.DoPCA(arrInput, arrOutput, n, mI, mO, true);
-	// 4.generate points from the output
-	for (size_t i = 0; i < n; i++)
-	{
-		for (size_t j = 0; j < mO; j++)
-		{
-			_gridEOF[j][i] = arrOutput[i * mO + j];
-		}
-	}
-	// 5.release the buffer
-	delete[] arrInput;
-	delete[] arrOutput;
-}
 

@@ -79,9 +79,9 @@ protected:
 	// groups
 	std::vector<Group> _vecGroups;
 	// trend detecting parameters
-	int _nM = 1;
+	int _nM = 2;
 	double _dbEpsilon = 0;
-	int _nDelta = 1;
+	int _nDelta = 5;
 
 	// hashtable of calculated trends
 	std::unordered_map<unsigned long, std::vector<int> > _hashTrends;
@@ -161,6 +161,9 @@ protected:
 	// get the time of epsilon
 	double getEventTime(int nTime1, int nTime2, int nIndex1, int nIndex2);
 
+	// get the two time for cross event, ordered
+	void getCrossEventTimes(double& dbTime1,double& dbTime2,int nTime1, int nTime2, int nIndex1, int nIndex2);
+
 	// add a new group
 	void addDBGroup(DBGroup g);
 	// print the calculated groups
@@ -195,6 +198,8 @@ public:
 	virtual void TrendDetectDB()=0;
 	// detect the trend
 	virtual void TrendDetect();
+	// get the event list
+	virtual std::vector<DBEpsilonEvent> GetEvents()=0;
 public:
 	int GetDBGroupSize();
 	DBGroup GetDBGroup(int nIndex);

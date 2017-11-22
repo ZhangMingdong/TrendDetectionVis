@@ -518,7 +518,6 @@ void Sequence2D::TrendDetect() {
 	printGroup();
 }
 
-
 void Sequence2D::FindEvents() {
 	// search each time step
 	for (size_t iStep = 0; iStep < _nLength; iStep++)
@@ -670,7 +669,6 @@ void Sequence2D::generateGroupFromEventPair(EpsilonEvent eS, EpsilonEvent eE, ve
 
 // ===========double time step
 
-
 void Sequence2D::generateGroupFromDBEventPair(DBEpsilonEvent eS, DBEpsilonEvent eE, vector<vector<IndexAndValue>> vecOrderedIndex) {
 	double dbTimeS = eS._dbTime;									// time of start event
 	double dbTimeE = eE._dbTime;									// time of end event
@@ -777,7 +775,8 @@ double Sequence2D::getEventTime(int nTime1, int nTime2, int nIndex1, int nIndex2
 	double dbV22 = _vecSequences[nIndex2][nTime2];
 
 	// at least one end point of seg1 is less than seg2
-	if (dbV21 < dbV11 || dbV22 < dbV12){
+	if (dbV11 - dbV21 > _dbEpsilon || dbV12-dbV22   > _dbEpsilon) {
+//	if (dbV21 < dbV11 || dbV22 < dbV12){
 		return nTime1 + (_dbEpsilon - dbV11 + dbV21) / (dbV12 - dbV11 - dbV22 + dbV21);
 	}
 	else{
@@ -786,7 +785,21 @@ double Sequence2D::getEventTime(int nTime1, int nTime2, int nIndex1, int nIndex2
 	
 }
 
+void Sequence2D::getCrossEventTimes(double& dbTime1, double& dbTime2, int nTime1, int nTime2, int nIndex1, int nIndex2) {
 
+	double dbV11 = _vecSequences[nIndex1][nTime1];
+	double dbV12 = _vecSequences[nIndex1][nTime2];
+	double dbV21 = _vecSequences[nIndex2][nTime1];
+	double dbV22 = _vecSequences[nIndex2][nTime2];
+	dbTime1= nTime1 + (_dbEpsilon - dbV11 + dbV21) / (dbV12 - dbV11 - dbV22 + dbV21);
+	dbTime2= nTime1 + (-_dbEpsilon - dbV11 + dbV21) / (dbV12 - dbV11 - dbV22 + dbV21);
+	if (dbTime2<dbTime1)
+	{
+		double dbTemp = dbTime1;
+		dbTime1 = dbTime2;
+		dbTime2 = dbTemp;
+	}
+}
 
 void Sequence2D::addDBGroup(DBGroup candidate) {
 	// check if this candidates has been added, only for the group from beginning
@@ -1061,7 +1074,6 @@ void Sequence2D::splitArrangement(vector<int> vecRank, int nRank, std::vector<st
 	}
 }
 
-
 Sequence2D* Sequence2D::GenerateInstance(SequenceType type) {
 	switch (type)
 	{
@@ -1106,7 +1118,6 @@ void Sequence2D::sortIndices() {
 		_vecRanks.push_back(vecRank);
 	}
 }
-
 
 double Sequence2D::getValue(int nIndex, double dbTime) {
 	int nTime1 = (int)dbTime;

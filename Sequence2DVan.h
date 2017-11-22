@@ -19,5 +19,9 @@ protected:
 public:
 	// detect the trend
 	virtual void TrendDetectDB();
+	// get the event list
+	virtual std::vector<DBEpsilonEvent> GetEvents() {
+		return _vecStartDBEvents;
+	};
 };
 

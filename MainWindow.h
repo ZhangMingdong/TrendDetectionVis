@@ -45,7 +45,7 @@ private:		// widget
 
 private:		// model
 	// used model
-	MeteModel* _pModel;
+	MeteModel* _pModel=NULL;
 private:
 	void createSceneAndView();
 	void createActions();

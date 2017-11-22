@@ -5,7 +5,6 @@
 #include "ContourGenerator.h"
 #include "EnsembleIntersections.h"
 #include "GLFont.h"
-#include "MeteLayer.h"
 
 #include "MyGLWidget.h"
 
@@ -23,8 +22,8 @@ public:
 	MyChartWidget(QWidget *parent = 0);
 	~MyChartWidget();
 protected:
-	MeteModel* _pModelE;
-	Sequence2D* _pSequence;
+	MeteModel* _pModelE = NULL;
+	Sequence2D* _pSequence = NULL;
 	int _nCurrentGroup = 0;
 public:
 	void SetModelE(MeteModel* pModelE);
@@ -42,6 +41,7 @@ protected:
 	void drawSelectedGroup();
 	void drawGridLines();
 	void drawSpaghetti();
+	void drawEvents();
 
 	// draw all the groups
 	void drawDBGroups();
@@ -55,6 +55,8 @@ protected:
 	void generateSequences(std::vector<std::vector<double>> vecData);
 
 	// generate artificial data
-	void generateSequenceArtificial();
+	void generateSequenceArtificial1();
+	void generateSequenceArtificial2();
+	void generateSequenceArtificial3();
 };
 

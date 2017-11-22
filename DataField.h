@@ -59,8 +59,6 @@ public:
 	*/
 	void GenerateClusteredData(const QList<int> listClusterLens, const int* arrLabels, QList<DataField*>& arrData);
 
-	// perform eof analysis
-	void DoEOF();
 
 private:
 	// smooth the variance to level nSmooth

@@ -10,26 +10,22 @@ public:
 	// detect the trend
 	virtual void TrendDetect();
 	virtual void TrendDetectDB();
+	// get the event list
+	virtual std::vector<DBEpsilonEvent> GetEvents() {
+		return _vecFreeDBEvents;
+	};
 private:
-	// generate reeb graph
-	void generateReebGraph();
-	// detect trends from reeb graph
-	void detectTrendFromRG();
-	// a step of group detection
-	void detectGroupStep(int nTime);
 	// find all the dbEvents
+	// new version, check each pair of event
 	void findDBEvents();
+	// old version, find event for memebers in the same group at a given time, check whether there are near enough in the adjacent time
+	void findDBEvents_1();
 	// check if nIndex1 and nIndex2 is free at time dbTime
-	bool isDBEventFree(double dbTime, double dbV1,double dbV2,int nIndex1, int nIndex2);
+	// 1:free event, index1 is less; -1: free event, index2 is less; 0:not free event
+	int isDBEventFree(double dbTime, int nIndex1, int nIndex2);
 	// detect groups from Events
 	void detectGroupsFromDBEvents();
 private:
-	// vector of the gaps in each time step
-	std::vector<std::vector<int>> _vecIndicesOfGaps;
-	std::vector<std::vector<int>> _vecGroupIndices;
-	std::vector<Group> _vecGroupCandidates;
-
-
 	std::vector<DBEpsilonEvent> _vecFreeDBEvents;
 };
 

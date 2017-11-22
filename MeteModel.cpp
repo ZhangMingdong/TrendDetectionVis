@@ -9,9 +9,6 @@
 #include "ContourGenerator.h"
 #include "ColorMap.h"
 
-#include "AHCClustering.h"
-#include "KMeansClustering.h"
-#include "MyPCA.h"
 #include "DataField.h"
 
 #include <fstream>
@@ -21,7 +18,6 @@
 
 #include "def.h"
 
-#include "DBSCANClustering.h"
 
 
 
@@ -176,49 +172,6 @@ void MeteModel::InitModel(int nEnsembleLen, int nWidth, int nHeight, int nFocusX
 	_pData->DoStatistic();
 
 	return;
-	// ensemble clustering
-	doEnsCluster();
-
-
-	// 5.generate features
-	for (size_t i = 0; i < _nEnsembleLen; i++)
-	{
-		// spaghetti
-		QList<ContourLine> contour;
-		_generator.Generate(_pData->GetLayer(i), contour, g_fThreshold, _nWidth, _nHeight, _nFocusX, _nFocusY, _nFocusW, _nFocusH);
-		_listContour.push_back(contour);
-		// for each isovalue
-		for (size_t j = 0; j < g_nIsoValuesLen; j++)
-		{
-			QList<ContourLine> contour;
-			_generator.Generate(_pData->GetLayer(i), contour, g_arrIsoValues[j], _nWidth, _nHeight, _nFocusX, _nFocusY, _nFocusW, _nFocusH);
-			_listMemberContour[i].push_back(contour);
-		}
-	}
-	// foreach ensemble cluster
-	for (size_t i = 0; i < g_nEnsClusterLen; i++)
-	{
-		// for each isovalue
-		for (size_t j = 0; j < g_nIsoValuesLen; j++)
-		{
-			QList<ContourLine> contour;
-			_generator.Generate(_arrEnsClusterData[i]->GetMean(), contour, g_arrIsoValues[j], _nWidth, _nHeight, _nFocusX, _nFocusY, _nFocusW, _nFocusH);
-			_listEnsClusterContour[i].push_back(contour);
-		}
-	}
-
-	_generator.Generate(_pData->GetUMin(), _listContourMinE, g_fThreshold, _nWidth, _nHeight, _nFocusX, _nFocusY, _nFocusW, _nFocusH);
-	_generator.Generate(_pData->GetUMax(), _listContourMaxE, g_fThreshold, _nWidth, _nHeight, _nFocusX, _nFocusY, _nFocusW, _nFocusH);
-
-	for (size_t j = 0; j < g_nIsoValuesLen; j++)
-	{
-		_generator.Generate(_pData->GetMean(), _listContourMeanE, g_arrIsoValues[j], _nWidth, _nHeight, _nFocusX, _nFocusY, _nFocusW, _nFocusH);
-	}
-
-	generateContourImp(_listContourMinE, _listContourMaxE, _listUnionAreaE);
-
-	// specializaed initialization
-	initializeModel();
 }
 
 void MeteModel::readDataFromText() {
@@ -428,115 +381,6 @@ bool ClusterComparison(UncertaintyRegion c1, UncertaintyRegion c2) {
 	return c1._nArea > c2._nArea;
 }
 
-// generate texture of clustered variance
-void MeteModel::buildTextureClusteredVariance() {
-	// 1.find uncertainty regions and sort them according to the areas
-
-	generateRegions();
-
-	// cluster in each region
-//	regionCluster();
-
-	// align them
-//	alignClusters();
-
-	// 6.Generate texture
-	// 6.1.initialize the texture
-	for (size_t i = 0; i < _nFocusLen; i++)
-	{
-		_dataTexture[4 * i + 0] = (GLubyte)100;
-		_dataTexture[4 * i + 1] = (GLubyte)100;
-		_dataTexture[4 * i + 2] = (GLubyte)100;
-		_dataTexture[4 * i + 3] = (GLubyte)255;
-	}
-
-	// 6.set the cluster color
-	for (size_t i = 0, length = _vecRegions.size(); i < _nUncertaintyRegions; i++)
-		//for (size_t i = 0, length = result.size(); i < length; i++)
-	{
-		
-		for (size_t j = 0, length = _vecRegions[i]._vecPoints.size(); j < length; j++) {
-
-			int nIndex = _vecRegions[i]._vecPoints[j].x*_nWidth + _vecRegions[i]._vecPoints[j].y;
-
-			_dataTexture[4 * nIndex + 0] = (GLubyte)ColorMap::GetCategory10I(i, 0);
-			_dataTexture[4 * nIndex + 1] = (GLubyte)ColorMap::GetCategory10I(i, 1);
-			_dataTexture[4 * nIndex + 2] = (GLubyte)ColorMap::GetCategory10I(i, 2);
-			_dataTexture[4 * nIndex + 3] = (GLubyte)255;
-		}
-	}
-}
-
-void MeteModel::generateRegions() {
-	_vecRegions.clear();
-	/*
-	// regions according to uncertainty
-	const double* pData = _pData->GetVari(_nSmooth);
-	SpatialCluster cluster;
-	cluster.DoCluster(pData, _nWidth, _nHeight, _dbVarThreshold, _vecRegions);
-	sort(_vecRegions.begin(), _vecRegions.end(), ClusterComparison);
-	if (_vecRegions.size()<_nUncertaintyRegions)
-		_nUncertaintyRegions = _vecRegions.size();
-
-		*/
-
-	/*
-	// generate six region left up corner
-	for (size_t i = 0; i < 6; i++)
-	{
-		UncertaintyRegion region;
-		for (size_t j = 0; j < 11; j++)
-		{
-			for (size_t k = 0; k < 11; k++) {
-				region._vecPoints.push_back(IPoint2(41 + j, 10 * i + k));
-			}
-		}
-		region._nArea = 121;
-		_vecRegions.push_back(region);
-	}
-	*/
-	// hierarchical clustering
-
-//	CLUSTER::Clustering* pClusterer = new CLUSTER::KMeansClustering();
-	CLUSTER::Clustering* pClusterer = new CLUSTER::AHCClustering();
-	// 1.parameters setting
-	int nN = _nLen;							// number of data items
-	int nK = 6;							// number of clusters
-	int nM = 1;								// dimension
-	// 2.input data
-	int* arrLabels = new int[nN];
-	double* arrBuf = new double[nN * nM];
-	for (size_t i = 0; i < nN; i++)
-	{
-		arrBuf[i] = _pData->GetMean()[i];
-	}
-	// 3.clustering
-	pClusterer->DoCluster(nN, nM, nK, arrBuf, arrLabels);
-	delete arrBuf;
-	// 4.counting each cluster
-	for (size_t i = 0; i < nK; i++)
-	{
-		UncertaintyRegion region;
-		_vecRegions.push_back(region);
-	}
-
-	for (size_t i = 0; i < nN; i++) {
-		int nW = i%_nWidth;
-		int nH = i / _nWidth;
-		_vecRegions[arrLabels[i]]._vecPoints.push_back(IPoint2(nH, nW));
-	}
-	/*
-	for (size_t i = 0; i < _nHeight; i++)
-	{
-		for (size_t j = 0; j < _nWidth; j++)
-		{
-			int nIndex = i*_nWidth + j;
-			_vecRegions[arrLabels[nIndex]]._vecPoints.push_back(IPoint2(i, j));
-		}
-	}
-	*/
-	delete[] arrLabels;
-}
 
 // generate texture of colormap of mean or variance
 void MeteModel::buildTextureColorMap() {
@@ -713,7 +557,6 @@ void MeteModel::readData() {
 
 void MeteModel::initializeModel() {
 	// EOF
-	_pData->DoEOF();
 
 
 
@@ -889,96 +732,6 @@ MeteModel* MeteModel::CreateModel() {
 	return pModel;
 }
 
-void MeteModel::generatePCAPoint(UncertaintyRegion& cluster, std::vector<DPoint3>& points) {
-	// 0.clear the points
-	points.clear();
-	// 1.set parameter
-	int mI = cluster._nArea;
-	int mO = 2;
-	int n = _nEnsembleLen;
-	// 2.allocate input and output buffer
-	double* arrInput = new double[mI*n];
-	double* arrOutput = new double[mO*n];
-	for (size_t i = 0; i < _nEnsembleLen; i++)
-	{
-		for (size_t j = 0; j < mI; j++) {
-			int x = cluster._vecPoints[j].x;
-			int y = cluster._vecPoints[j].y;
-			arrInput[i*mI + j] = _pData->GetData(i, x, y);
-		}
-	}
-	// 3.pca
-	MyPCA pca;
-	pca.DoPCA(arrInput, arrOutput, n, mI, mO, true);
-	// 4.generate points from the output
-	for (size_t i = 0; i < n; i++)
-	{
-		points.push_back(DPoint3(arrOutput[i * 2], arrOutput[i * 2 + 1], 0));
-	}
-	// 5.release the buffer
-	delete[] arrInput;
-	delete[] arrOutput;
-}
-
-void MeteModel::clusterSpatialArea(UncertaintyRegion& cluster, std::vector<DPoint3>& points, ClusterResult& cr) {
-	// 1.pca
-	generatePCAPoint(cluster, points);
-
-	// 2.cluster
-	CLUSTER::Clustering* pClusterer = new CLUSTER::KMeansClustering();
-	int nN = _nEnsembleLen;			// number of data items
-	int nK = _nClusters;						// clusters
-	int* arrLabel = new int[nN];
-	bool bClusterUsingPCA = false;	// whether using pca points to cluster
-	if (bClusterUsingPCA)
-	{
-		int nM = 2;					// dimension
-		double* arrBuf = new double[nN * nM];
-		for (size_t i = 0; i < nN; i++)
-		{
-			arrBuf[i*nM] = points[i].x;
-			arrBuf[i*nM + 1] = points[i].y;
-		}
-		pClusterer->DoCluster(nN, nM, nK, arrBuf, arrLabel);
-		delete arrBuf;
-	}
-	else {
-		int nM = cluster._nArea;		// dimension
-		double* arrBuf = new double[nN * nM];
-		for (size_t i = 0; i < nN; i++)
-		{
-			for (size_t j = 0; j < nM; j++)
-			{
-				int x = cluster._vecPoints[j].x;
-				int y = cluster._vecPoints[j].y;
-				arrBuf[i * nM + j] = _pData->GetData(i, x, y);
-			}
-		}
-		pClusterer->DoCluster(nN, nM, nK, arrBuf, arrLabel);
-		delete arrBuf;
-	}
-
-
-	// 4.record label
-	cr.Reset(_nEnsembleLen, nK);
-	for (size_t i = 0; i < _nEnsembleLen; i++)
-	{
-		cr.PushLabel(i, arrLabel[i]);
-	}
-
-	// 5.release the resouse
-	delete arrLabel;
-	delete pClusterer;
-}
-
-void MeteModel::setLabelsForPCAPoints(std::vector<DPoint3>& points, ClusterResult&cr) {
-	// 3.set label for pca points
-	for (size_t i = 0; i < _nEnsembleLen; i++)
-	{
-		points[i].z = cr._arrLabels[i] + .5;
-	}
-}
-
 void MeteModel::SetVarThreshold(double dbThreshold)
 { 
 	if (abs(dbThreshold - _dbVarThreshold) < 0.0001) return;
@@ -1037,7 +790,6 @@ void MeteModel::regenerateTexture() {
 		break;
 	case MeteModel::bg_cluster:
 		//		return generateClusteredVarianceTexture_old();
-		buildTextureClusteredVariance();
 		break;
 	case MeteModel::bg_varThreshold:
 		buildTextureThresholdVariance();
@@ -1072,155 +824,18 @@ GLubyte* MeteModel::generateTextureNew() {
 
 // cluster in each region
 void MeteModel::regionCluster() {
-	for (size_t i = 0, length = std::min((int)_vecRegions.size(), _nUncertaintyRegions); i < length; i++)
-	{
-		clusterSpatialArea(_vecRegions[i], _vecPCAPoints[i], _mxClusterResult[0][i]);
-	}
+
 }
 
 void MeteModel::calculateSimilarity() {
-	// 1.initialize the similarities to 0
-	for (size_t i = 0; i < _nUncertaintyRegions; i++)
-	{
-		for (size_t j = 0; j < _nUncertaintyRegions; j++)
-		{
-			for (size_t k = 0; k <= _nClusters; k++)
-			{
-				_mxSimilarity[i][j][k] = 0;
-			}
-		}
-	}
-	// 2.counting each cluster
-	for (size_t l = 0; l < _nEnsembleLen; l++)
-	{
-		for (size_t i = 0; i < _nUncertaintyRegions; i++)
-		{
-			for (size_t j = 0; j < i; j++) {
-				if (_mxClusterResult[0][i]._arrLabels[l] == _mxClusterResult[0][j]._arrLabels[l])
-				{
-					_mxSimilarity[i][j][_mxClusterResult[0][i]._arrLabels[l]]++;
-				}
-			}
-		}
-	}
 
-	// 3.counting the similarities for all the clusters
-	for (size_t i = 0; i < _nUncertaintyRegions; i++)
-	{
-		for (size_t j = 0; j < _nUncertaintyRegions; j++)
-		{
-			for (size_t k = 0; k <= _nEnsembleLen; k++)
-			{
-				if (_mxClusterResult[0][i]._arrLabels[k] == _mxClusterResult[0][j]._arrLabels[k])
-				{
-					_mxSimilarity[i][j][_nClusters]++;
-				}
-			}
-		}
-	}
 }
 
 void MeteModel::SetFocusedRegion(int nRegion) {
 	_nFocusedRegion = nRegion;
 
-	alignClusters();
 }
 
-// align the cluster results
-void MeteModel::alignClusters() {
-	qDebug() << "Align Clusters: " << _nFocusedRegion;
-	// first region, sort the clusters according to the number of their members
-	_mxClusterResult[0][_nFocusedRegion].Sort();
-
-	int nRegionSize = std::min((int)_vecRegions.size(), _nUncertaintyRegions);
-
-	// 2.cluster in each uncertainty region
-	for (size_t i = _nFocusedRegion+1; i < nRegionSize; i++)
-	{
-		// the following region match the region before
-		_mxClusterResult[0][i].Match(_mxClusterResult[0][i - 1]);
-	}
-	for (int i = _nFocusedRegion-1; i >=0; i--)
-	{
-		// the following region match the region before
-		_mxClusterResult[0][i].Match(_mxClusterResult[0][i + 1]);
-	}
-	// 3.align the results
-	ClusterResult::Align(_mxClusterResult[0], _nUncertaintyRegions,_nFocusedRegion);
-
-	// 4.reset labels for pca
-	for (size_t i = 0; i < _nUncertaintyRegions; i++)
-	{
-		setLabelsForPCAPoints(_vecPCAPoints[i], _mxClusterResult[0][i]);
-	}
-
-	// 5.calculate the similarity between different uncertainty regions
-	calculateSimilarity();
-}
-
-void MeteModel::doEnsCluster() {
-	CLUSTER::Clustering* pClusterer = new CLUSTER::KMeansClustering();
-	// 1.parameters setting
-	int nN = _nEnsembleLen;					// number of data items
-	int nK = g_nEnsClusterLen;				// number of clusters
-	/*
-	int nM = _nLen;							// dimension
-	// 2.input data
-	double* arrBuf = new double[nN * nM];
-	for (size_t i = 0; i < nN; i++)
-	{
-		for (size_t j = 0; j < nM; j++)
-		{
-			arrBuf[i * nM + j] = _pData->GetData(i, j);
-		}
-	}
-	*/
-	int nM = g_nClusterRegionR*g_nClusterRegionR;							// dimension
-	// 2.input data
-	double* arrBuf = new double[nN * nM];
-	for (size_t i = 0; i < nN; i++)
-	{
-		for (size_t j = 0; j < g_nClusterRegionR; j++)
-		{
-			for (size_t k = 0; k < g_nClusterRegionR; k++) {
-				arrBuf[i * nM + j * g_nClusterRegionR + k] = _pData->GetData(i,g_nClusterRegionY+j,g_nClusterRegionX+k);
-			}
-		}
-	}
-	// 3.clustering
-	pClusterer->DoCluster(nN, nM, nK, arrBuf, _arrLabels);
-	delete arrBuf;
-	// 4.counting each cluster
-	int arrLens[g_nEnsClusterLen];
-	for (size_t i = 0; i < g_nEnsClusterLen; i++)
-	{
-		arrLens[i] = 0;
-	}
-
-	for (size_t i = 0; i < _nEnsembleLen; i++)
-	{
-		arrLens[_arrLabels[i]]++;
-	}
-
-
-	QList<int> listLen;
-	for (size_t i = 0; i < g_nEnsClusterLen; i++)
-	{
-		listLen.append(arrLens[i]);
-	}
-	// 5.postprocess the clustered data
-	_pData->GenerateClusteredData(listLen, _arrLabels, _arrEnsClusterData);
-
-	// 6.output labels
-	for (size_t i = 0; i < g_nEnsClusterLen; i++)
-	{
-		for (size_t j = 0; j < _nEnsembleLen; j++)
-		{
-			if (_arrLabels[j] == i) qDebug() << j;
-		}
-		qDebug()<<"\n";
-	}
-}
 
 void MeteModel::readObsData() {
 	int nBias = g_nBiasY * 31 + g_nBiasD;
