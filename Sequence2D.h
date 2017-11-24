@@ -17,19 +17,13 @@ struct EpsilonEvent {
 };
 
 struct Group {
-	std::vector<int> _member;	// members
+	std::set<int> _member;	// members
 	int _nS;					// start time
 	int _nE;					// end time
+	bool _bAssigned = false;
 								// check whether containing g
 	bool Contain(const Group& g) {
-		int nLen = _member.size();
-		if (g._member.size() == nLen)
-		{
-			for (size_t i = 0; i < nLen; i++)
-				if (g._member[i] != _member[i]) return false;
-			return _nS <= g._nS&&_nE >= g._nE;
-		}
-		return false;
+		return _member == g._member;
 	}
 };
 
@@ -79,9 +73,15 @@ protected:
 	// groups
 	std::vector<Group> _vecGroups;
 	// trend detecting parameters
-	int _nM = 2;
 	double _dbEpsilon = 0;
-	int _nDelta = 5;
+//	int _nM = 2;
+//	int _nDelta = 5;
+
+//	int _nM = 1;
+//	int _nDelta = 1;
+
+	int _nM = 5;
+	int _nDelta = 10;
 
 	// hashtable of calculated trends
 	std::unordered_map<unsigned long, std::vector<int> > _hashTrends;
@@ -184,7 +184,8 @@ public:
 	enum SequenceType
 	{
 		ST_Buchin,
-		ST_Van
+		ST_Van,
+		ST_Jeung
 	};
 	static Sequence2D* GenerateInstance(SequenceType type);
 	//=================used in both class=================

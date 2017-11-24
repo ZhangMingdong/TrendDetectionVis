@@ -41,8 +41,9 @@ using namespace std;
 MyChartWidget::MyChartWidget(QWidget *parent)
 	: MyGLWidget(parent)
 {
-	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Buchin);
+//	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Buchin);
 //	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Van);
+	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Jeung);
 }
 
 MyChartWidget::~MyChartWidget()
@@ -85,15 +86,15 @@ void MyChartWidget::paint() {
 	drawGridLines();
 
 	// draw selected group
-//	drawSelectedGroup();
+	drawSelectedGroup();
 	drawSelectedDBGroup();
 
 	// draww abstracted groups
-//	drawGroups();
+	drawGroups();
 	drawDBGroups();
 
 	// draw the event line
-//	drawEvents();
+	drawEvents();
 
 	glPopMatrix();
 }
@@ -151,6 +152,8 @@ void MyChartWidget::SetModelE(MeteModel* pModelE) {
 //	_pSequence->TrendDetectDBImproved();
 
 	_pSequence->TrendDetectDB();
+
+//	_pSequence->TrendDetect();
 }
 
 void MyChartWidget::mouseDoubleClickEvent(QMouseEvent *event) {
@@ -204,9 +207,9 @@ void MyChartWidget::drawGroups() {
 		for (size_t k = g._nS; k <= g._nE; k++)
 		{
 			double dbY = 0;
-			for (size_t j = 0; j < g._member.size(); j++)
+			for(int nIndex: g._member)
 			{
-				dbY += _pSequence->GetValue(g._member[j], k);
+				dbY += _pSequence->GetValue(nIndex, k);
 			}
 
 			glVertex3f(k, dbY / dbSize, 0);
@@ -222,13 +225,11 @@ void MyChartWidget::drawSelectedGroup() {
 	glColor3f(0, 1, 0);
 	Group g = _pSequence->GetGroup(_nCurrentGroup);
 //	cout << g._nS << "\t" << g._nE << endl;
-	for (size_t j = 0; j < g._member.size(); j++)
-	{
-//		cout << g._member[j] << endl;
+	for(int nIndex : g._member){
 		glBegin(GL_LINE_STRIP);
 		for (size_t k = g._nS; k <= g._nE; k++)
 		{
-			glVertex3f(k, _pSequence->GetValue(g._member[j],k), 0);
+			glVertex3f(k, _pSequence->GetValue(nIndex,k), 0);
 		}
 		glEnd();
 	}

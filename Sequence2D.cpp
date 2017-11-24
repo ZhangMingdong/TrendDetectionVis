@@ -5,6 +5,7 @@
 
 #include "Sequence2DBuchin.h"
 #include "Sequence2DVan.h"
+#include "Sequence2DJeung.h"
 
 using namespace std;
 
@@ -169,7 +170,7 @@ void Sequence2D::TrendDetectRootOnly() {
 	group0._nE = 0;
 	for (size_t i = 0; i < _nEns; i++)
 	{
-		group0._member.push_back(i);
+		group0._member.insert(i);
 	}
 
 	// start from the first step
@@ -181,13 +182,10 @@ void Sequence2D::TrendDetectRootOnly() {
 }
 
 void Sequence2D::printGroup() {
+	cout << "number of detected trends: " << _vecGroups.size() << endl;
 	for each (Group g in _vecGroups)
 	{
-#ifdef REVERSE
-		cout << _nWidth - 1 - g._nE << "\t" << _nWidth - 1 - g._nS << "\t";
-#else
-		cout <<"(" << g._nS << "," << g._nE << "):";
-#endif		
+		cout << "(" << g._nS << "," << g._nE << "):";
 		for each (int nMember in g._member)
 		{
 			cout << nMember << ",";
@@ -204,7 +202,7 @@ void Sequence2D::TrendDetect_2() {
 		group0._nS = i;
 		for (size_t i = 0; i < _nEns; i++)
 		{
-			group0._member.push_back(i);
+			group0._member.insert(i);
 		}
 
 		// start from the first step
@@ -239,7 +237,7 @@ void Sequence2D::TrendDetect_1() {
 		group0._nS = i;
 		for (size_t i = 0; i < _nEns; i++)
 		{
-			group0._member.push_back(i);
+			group0._member.insert(i);
 		}
 
 		// start from the first step
@@ -303,7 +301,7 @@ void Sequence2D::trendDetectStep(Group candidate, int nStep) {
 				newCandidate._nS = candidate._nS;
 				for (size_t j = 0; j < length2; j++)
 				{
-					newCandidate._member.push_back(vecNewPointArray[i][j]._nIndex);
+					newCandidate._member.insert(vecNewPointArray[i][j]._nIndex);
 				}
 				// reset the start time of the new candidate
 				newCandidate._nS = calculateStart(newCandidate, nStep);
@@ -344,7 +342,7 @@ void Sequence2D::trendDetectStep_SplitOnly(Group candidate, int nStep) {
 				newCandidate._nS = candidate._nS;
 				for (size_t j = 0; j < length2; j++)
 				{
-					newCandidate._member.push_back(vecNewPointArray[i][j]._nIndex);
+					newCandidate._member.insert(vecNewPointArray[i][j]._nIndex);
 				}
 				// reset the start time of the new candidate
 				newCandidate._nS = calculateStart(newCandidate, nStep);
@@ -359,7 +357,6 @@ void Sequence2D::trendDetectStep_SplitOnly(Group candidate, int nStep) {
 void Sequence2D::addGroup(Group candidate) {
 	if (candidate._nE - candidate._nS>_nDelta && candidate._member.size()>_nM)
 	{
-		sort(candidate._member.begin(), candidate._member.end());
 		_vecGroups.push_back(candidate);
 	}
 }
@@ -370,9 +367,9 @@ int Sequence2D::calculateStart(Group g, int nCurrent) {
 	{
 		// 1.get the point in the new timestep
 		vector<IndexAndValue> vecNewPoints;
-		for (size_t i = 0, length = g._member.size(); i < length; i++)
+		for(int nIndex:g._member)
 		{
-			vecNewPoints.push_back(IndexAndValue(g._member[i], _vecSequences[g._member[i]][nS]));
+			vecNewPoints.push_back(IndexAndValue(nIndex, _vecSequences[nIndex][nS]));
 		}
 
 		// 2.sort them according to the value
@@ -395,9 +392,9 @@ int Sequence2D::calculateStart(Group g, int nCurrent) {
 vector<vector<IndexAndValue>> Sequence2D::generateSegments(const Group& candidate, int nStep) {
 	// 1.get the point in the new timestep
 	vector<IndexAndValue> vecNewPoints;
-	for (size_t i = 0, length = candidate._member.size(); i < length; i++)
+	for(int nIndex:candidate._member)
 	{
-		vecNewPoints.push_back(IndexAndValue(candidate._member[i], _vecSequences[candidate._member[i]][nStep]));
+		vecNewPoints.push_back(IndexAndValue(nIndex, _vecSequences[nIndex][nStep]));
 	}
 
 	// 2.sort them according to the value
@@ -464,7 +461,7 @@ void Sequence2D::startTrendDetect(vector<IndexAndValue> segment, int nStep) {
 	Group g;
 	g._nS = nStep;
 	for each (IndexAndValue iv in segment)
-		g._member.push_back(iv._nIndex);
+		g._member.insert(iv._nIndex);
 	trendDetectStep(g, nStep + 1);
 	int nLen = segment.size();
 	if (nLen < _nM + 1) return;
@@ -658,7 +655,7 @@ void Sequence2D::generateGroupFromEventPair(EpsilonEvent eS, EpsilonEvent eE, ve
 		newGroup._nE = nTimeE;
 		for each (IndexAndValue iv in vecOrderedIndex[0])
 		{
-			newGroup._member.push_back(iv._nIndex);
+			newGroup._member.insert(iv._nIndex);
 		}
 		addGroup(newGroup);
 
@@ -1082,6 +1079,9 @@ Sequence2D* Sequence2D::GenerateInstance(SequenceType type) {
 		break;
 	case Sequence2D::ST_Buchin:
 		return new Sequence2DBuchin();
+		break;
+	case Sequence2D::ST_Jeung:
+		return new Sequence2DJeung();
 		break;
 	default:
 		return NULL;

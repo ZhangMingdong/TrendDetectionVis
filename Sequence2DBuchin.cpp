@@ -20,19 +20,18 @@ void Sequence2DBuchin::TrendDetect() {
 void Sequence2DBuchin::TrendDetectDB() {
 	// sort the indices
 	sortIndices();
+
 	// find all the dbEvents();
 	findDBEvents();
 	
 	// generate groups
 	detectGroupsFromDBEvents();
 
+	// print the calculated result
 	printDBGroup();
-
-
 }
 
 void Sequence2DBuchin::findDBEvents() {
-
 	// search each time step, from the 2nd one
 	for (size_t iStep = 1; iStep < _nLength; iStep++)
 	{
