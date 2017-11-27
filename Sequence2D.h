@@ -3,6 +3,8 @@
 #include <vector>
 #include <set>
 
+#include "IndexAndValue.h"
+
 //#define REVERSE
 
 // an epsilon event
@@ -44,13 +46,7 @@ struct DBGroup {
 	double _dbR;				// radius of the group
 };
 
-// pair of index and value
-struct IndexAndValue {
-	int _nIndex = 0;
-	double _dbValue = 0;
-	IndexAndValue(int nIndex, double dbValue) :_nIndex(nIndex), _dbValue(dbValue) {};
-};
-bool IndexAndValueCompare(IndexAndValue iv1, IndexAndValue iv2);
+
 
 bool DBEventCompare(DBEpsilonEvent e1, DBEpsilonEvent e2);
 /*

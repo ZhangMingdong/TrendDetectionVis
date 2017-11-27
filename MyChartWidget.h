@@ -7,6 +7,7 @@
 #include "GLFont.h"
 
 #include "MyGLWidget.h"
+#include "Field2D.h"
 
 #include<vector>
 #include<unordered_map>
@@ -23,7 +24,7 @@ public:
 	~MyChartWidget();
 protected:
 	MeteModel* _pModelE = NULL;
-	Sequence2D* _pSequence = NULL;
+	Sequence2D* _pSequence = NULL;	
 	int _nCurrentGroup = 0;
 public:
 	void SetModelE(MeteModel* pModelE);
@@ -58,5 +59,10 @@ protected:
 	void generateSequenceArtificial1();
 	void generateSequenceArtificial2();
 	void generateSequenceArtificial3();
+
+	//================2dField================
+	FIELD2D::Field2D* _pField = NULL;
+	// generate sequences for trend detection -- ensembles
+	void generateField();
 };
 
