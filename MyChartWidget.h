@@ -60,9 +60,6 @@ protected:
 	void generateSequenceArtificial2();
 	void generateSequenceArtificial3();
 
-	//================2dField================
-	FIELD2D::Field2D* _pField = NULL;
-	// generate sequences for trend detection -- ensembles
-	void generateField();
+
 };
 

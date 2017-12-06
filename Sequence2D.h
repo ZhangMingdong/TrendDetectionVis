@@ -73,11 +73,11 @@ protected:
 //	int _nM = 2;
 //	int _nDelta = 5;
 
-//	int _nM = 1;
-//	int _nDelta = 1;
+	int _nM = 1;
+	int _nDelta = 1;
 
-	int _nM = 5;
-	int _nDelta = 10;
+//	int _nM = 5;
+//	int _nDelta = 10;
 
 	// hashtable of calculated trends
 	std::unordered_map<unsigned long, std::vector<int> > _hashTrends;
@@ -85,7 +85,7 @@ public:
 	// add sequence
 	void AddSequence(std::vector<double> seq);
 	// initialization
-	void Init(int nLength, double dbMin, double dbMax, double dbEpsilon);
+	void Init(int nLength, double dbMin, double dbMax, double dbEpsilon,int nDelta,int nM);
 	int GetGroupSize();
 	Group GetGroup(int nIndex);
 	double GetValue(int nSeq, int nIndex);

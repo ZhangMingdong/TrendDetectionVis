@@ -10,6 +10,7 @@
 
 class MyMapWidget;
 class MyChartWidget;
+class MyFieldWidget;
 class MeteModel;
 
 class DisplayCtrlWidget;
@@ -38,6 +39,7 @@ private:	// action
 	QAction *viewShowClusterBSAction;		// show cluster of Bayesian variance statistics
 	QAction *viewShowClusterBVAction;		// show cluster of Bayesian variance
 private:		// widget
+	MyFieldWidget *_viewField;
 	MyChartWidget *_viewChart;
 	// control widget
 	DisplayCtrlWidget * _pDisplayCtrlWidget;

@@ -21,11 +21,13 @@ void Sequence2DJeung::TrendDetectDB() {
 
 // detect the trend
 void Sequence2DJeung::TrendDetect() {
-
+	// sort the members at each timestep
 	sortIndices();
 
+	// clustering at each time step
 	groupTimeSteps();
 
+	// detect trend based on the groups at each time step
 	trendDetectBasedOnGroups();
 
 	// print the result
@@ -39,23 +41,22 @@ std::vector<DBEpsilonEvent> Sequence2DJeung::GetEvents() {
 }
 
 void Sequence2DJeung::groupTimeSteps() {
-	for each (vector<IndexAndValue> vecIV in _vectOrderedIndex)
-	{
-		vector<set<int>> vecC;
-		// for each time steps
-		for (size_t i = 0; i < _nEns; i++)
-		{
-			if (i==0|| vecIV[i]._dbValue-vecIV[i-1]._dbValue>_dbEpsilon)
+	for each (vector<IndexAndValue> vecIV in _vectOrderedIndex){			// for each time step
+		vector<set<int>> vecC;												// clusters in this timestep
+		set<int> setC;														// a cluster
+		for (size_t i = 0; i < _nEns; i++){									// for each member
+			if (i>0&& vecIV[i]._dbValue-vecIV[i-1]._dbValue>_dbEpsilon)
 			{
-				// add a new group
-				set<int> setC;
-				setC.insert(vecIV[i]._nIndex);
-				vecC.push_back(setC);
+				// add a new group, if its size is larger than M
+				if (setC.size()>_nM) vecC.push_back(setC);
+
+				// clear the current cluster for next cluster
+				setC.clear();
 			}
-			else {
-				vecC[vecC.size() - 1].insert(vecIV[i]._nIndex);
-			}
+			// add the current element into the current cluster
+			setC.insert(vecIV[i]._nIndex);
 		}
+		// add the vector of clusters into the cluster list
 		_vecClusters.push_back(vecC);
 	}
 }
@@ -77,22 +78,12 @@ void Sequence2DJeung::trendDetectBasedOnGroups() {
 	// store the candidates during the process of the calculation
 	vector<Group> vecCandidates;
 
-	// first time step -- add the clusters with element more than M to the vector of candidates
-	for (set<int> setC : _vecClusters[0]) {
-		if (setC.size()>_nM)
-		{
-			Group g;
-			g._nS = g._nE = 0;
-			g._member = setC;
-			vecCandidates.push_back(g);
-		}
-	}
 
-	// subsequent time steps
-	for (size_t i = 1; i < _nLength; i++)
+	// spread at each time step
+	for (size_t iT = 0; iT < _nLength; iT++)
 	{
 		vector<Group> vecCandidatesNew;
-		int nClusters = _vecClusters[i].size();
+		int nClusters = _vecClusters[iT].size();
 
 		// set assigned of all the clusters false
 		vector<bool> vecAssigned(nClusters);
@@ -106,29 +97,28 @@ void Sequence2DJeung::trendDetectBasedOnGroups() {
 			candidate._bAssigned = false;
 			// for each cluster
 			for (int iC = 0; iC < nClusters; iC++) {
-				set<int> setC = _vecClusters[i][iC];
-				if (!setC.size() > _nM) continue;
+				set<int> setC = _vecClusters[iT][iC];
 				// calculate intersection
 				std::set<int> common_data;
-				set_intersection(setC.begin(), setC.end(), candidate._member.begin(), candidate._member.end(),
-					inserter(common_data, common_data.begin()));
+				set_intersection(setC.begin(), setC.end(), candidate._member.begin(), candidate._member.end()
+					,inserter(common_data, common_data.begin()));
+
 				if (common_data.size()>_nM)
 				{
 					if (common_data == candidate._member)
 					{
 						// prolong the candidate
-						candidate._nE = i;
+						candidate._nE = iT;
 						AddGroupToList(candidate, vecCandidatesNew);
-						//vecCandidatesNew.push_back(candidate);
 						candidate._bAssigned = true;
 					}
 					else {
 						// add new candidate for the intersection
 						Group gNew;
-						gNew._nS = gNew._nE = candidate._nS;
+						gNew._nS = candidate._nS;
+						gNew._nE = iT;
 						gNew._member = common_data;
 						AddGroupToList(gNew, vecCandidatesNew);
-						//vecCandidatesNew.push_back(gNew);
 					}
 					if (common_data==setC)
 					{
@@ -136,27 +126,23 @@ void Sequence2DJeung::trendDetectBasedOnGroups() {
 					}
 				}
 			}
-		}
-		// add all the unassigend candidate to the group list
-		for (Group candidate : vecCandidates) {
+			// if this candidate is not assigend, add it to the group list
 			if (!candidate._bAssigned)
 			{
-				candidate._nE = i-1;
 				addGroup(candidate);
 			}
 		}
+		
 		// add all the unassigned clusters to the candidate list
 		for (int iC = 0; iC < nClusters; iC++) {
-			if (!vecAssigned[iC]&& _vecClusters[i][iC].size()>_nM)
+			if (!vecAssigned[iC])
 			{
 				Group gNew;
-				gNew._nE = gNew._nS = i;
-				gNew._member = _vecClusters[i][iC];
+				gNew._nE = gNew._nS = iT;
+				gNew._member = _vecClusters[iT][iC];
 				AddGroupToList(gNew, vecCandidatesNew);
-				//vecCandidatesNew.push_back(gNew);
 			}
 		}
-
 		vecCandidates = vecCandidatesNew;
 	}
 

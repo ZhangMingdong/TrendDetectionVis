@@ -19,7 +19,7 @@
 
 #define BUFSIZE 512
 
-//#define USE_ARTIFICIAL
+#define USE_ARTIFICIAL
 //#define USE_GDP
 
 
@@ -27,10 +27,14 @@
 const double g_dbScaleW = 2;
 const double g_dbScaleH = 1;
 const double g_dbEpsilon = 5;
+const double g_nDelta = 1;
+const double g_nM = 1;
 #else
 const double g_dbScaleW = .05;
 const double g_dbScaleH = .03;
 const double g_dbEpsilon = .5;
+const double g_nDelta = 10;
+const double g_nM = 5;
 #endif
 
 
@@ -46,13 +50,11 @@ MyChartWidget::MyChartWidget(QWidget *parent)
 	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Jeung);
 
 
-	_pField = FIELD2D::Field2D::GenerateInstance(FIELD2D::Field2D::ST_Jeung);
 }
 
 MyChartWidget::~MyChartWidget()
 {
 	delete _pSequence;
-	delete _pField;
 }
 
 void MyChartWidget::paint() {
@@ -146,8 +148,6 @@ void MyChartWidget::SetModelE(MeteModel* pModelE) {
 	// generate the sequences
 	generateSequences();
 
-	// generate the field
-	generateField();
 #endif
 
 #endif
@@ -158,7 +158,7 @@ void MyChartWidget::SetModelE(MeteModel* pModelE) {
 //	_pSequence->TrendDetectDB();
 //	_pSequence->TrendDetectDBImproved();
 
-	_pField->TrendDetect();
+
 	_pSequence->TrendDetectDB();
 
 
@@ -201,7 +201,7 @@ void MyChartWidget::generateSequences() {
 	}
 
 
-	_pSequence->Init(nWidth, dbMin, dbMax, g_dbEpsilon);
+	_pSequence->Init(nWidth, dbMin, dbMax, g_dbEpsilon, g_nDelta, g_nM);
 }
 
 void MyChartWidget::drawGroups() {
@@ -442,7 +442,7 @@ void MyChartWidget::generateSequences(std::vector<std::vector<double>> vecData) 
 
 
 
-	_pSequence->Init(nLen, dbMin, dbMax, g_dbEpsilon);
+	_pSequence->Init(nLen, dbMin, dbMax, g_dbEpsilon, g_nDelta, g_nM);
 }
 
 void MyChartWidget::generateSequenceArtificial1() {
@@ -474,7 +474,7 @@ void MyChartWidget::generateSequenceArtificial1() {
 	}
 
 
-	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon);
+	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon, g_nDelta, g_nM);
 }
 
 void MyChartWidget::generateSequenceArtificial2() {
@@ -508,7 +508,7 @@ void MyChartWidget::generateSequenceArtificial2() {
 	}
 
 
-	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon);
+	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon, g_nDelta, g_nM);
 }
 
 void MyChartWidget::generateSequenceArtificial3() {
@@ -581,7 +581,7 @@ void MyChartWidget::generateSequenceArtificial3() {
 	}
 
 
-	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon);
+	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon,g_nDelta,g_nM);
 }
 
 void MyChartWidget::drawEvents() {
@@ -604,27 +604,3 @@ void MyChartWidget::drawEvents() {
 	glEnd();
 }
 
-
-void MyChartWidget::generateField() {
-	int nWidth = _pModelE->GetW();
-	int nHeight = _pModelE->GetH();
-	int nEns = _pModelE->GetEnsembleLen();
-	vector<vector<vector<IndexAndValue>>> vecData;
-	for (size_t i = 0; i < nHeight; i++)
-//	for (int i = nHeight - 1; i >= 0;i--)
-	{
-		vector<vector<IndexAndValue>> vecRow;
-		for (size_t j = 0; j < nWidth; j++)
-		{
-			vector<IndexAndValue> vecIV;
-			for (size_t k = 0; k < nEns; k++)
-			{
-				vecIV.push_back(IndexAndValue(k, _pModelE->GetData()->GetData(k,i,j)));
-			}
-			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
-			vecRow.push_back(vecIV);
-		}
-		vecData.push_back(vecRow);
-	}
-	_pField->Init(vecData, g_dbEpsilon);
-}

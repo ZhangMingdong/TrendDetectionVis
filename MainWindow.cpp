@@ -14,9 +14,13 @@
 
 #include "MainWindow.h"
 #include "MyChartWidget.h"
+#include "MyFieldWidget.h"
 #include "MeteModel.h"
 
 #include "DisplayCtrlWidget.h"
+
+// using field if defined, otherwise use sequence
+#define FIELD_2D
 
 
 
@@ -85,9 +89,16 @@ void MainWindow::createSceneAndView(){
 	splitter->setOrientation(Qt::Vertical);
 //	splitter->addWidget(_view3D);
 
+
+#ifdef FIELD_2D
+	_viewField = new MyFieldWidget;
+	_viewField->SetModelE(_pModel);
+	splitter->addWidget(_viewField);
+#else
 	_viewChart = new MyChartWidget;
 	_viewChart->SetModelE(_pModel);
 	splitter->addWidget(_viewChart);
+#endif
 
 	setCentralWidget(splitter);
 
@@ -101,6 +112,7 @@ void MainWindow::createDockWidgets() {
 		QDockWidget::DockWidgetFloatable;
 
 	_pDisplayCtrlWidget = new DisplayCtrlWidget();
+
 
 
 	QDockWidget *controlDockWidget = new QDockWidget(

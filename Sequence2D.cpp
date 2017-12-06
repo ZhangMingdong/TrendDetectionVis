@@ -52,12 +52,15 @@ void Sequence2D::AddSequence(std::vector<double> seq) {
 	_vecSequences.push_back(seq);
 }
 
-void Sequence2D::Init(int nLength, double dbMin, double dbMax, double dbEpsilon) {
+void Sequence2D::Init(int nLength, double dbMin, double dbMax, double dbEpsilon, int nDelta, int nM) {
 	_nLength = nLength;
 	_dbMin = dbMin;
 	_dbMax = dbMax;
 	_dbEpsilon = dbEpsilon;
 	_nEns = _vecSequences.size();
+
+	_nDelta = nDelta;
+	_nM = nM;
 
 	/*
 	// based on the first element

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <ctime>
+#include <iterator>
 
 //#include "Field2DBuchin.h"
 //#include "Field2DVan.h"
@@ -28,12 +29,14 @@ namespace FIELD2D {
 		_vecFields.push_back(seq);
 	}
 
-	void Field2D::Init(std::vector<std::vector<std::vector<IndexAndValue>>> vectOrderedIndex, double dbEpsilon) {
+	void Field2D::Init(std::vector<std::vector<std::vector<IndexAndValue>>> vectOrderedIndex, double dbEpsilon, int nM, int nDelta) {
 		_vectOrderedIndex = vectOrderedIndex;
 		_nHeight = vectOrderedIndex.size();
 		_nWidth = vectOrderedIndex[0].size();
 		_nEns = vectOrderedIndex[0][0].size();
 		_dbEpsilon = dbEpsilon;
+		_nM = nM;
+		_nDelta = nDelta;
 
 	}
 
@@ -64,8 +67,42 @@ namespace FIELD2D {
 	}
 
 	void Field2D::addGroup(Group candidate) {
-//		if (candidate._nE - candidate._nS>_nDelta && candidate._member.size()>_nM)
+		if (candidate._setPoints.size()>_nDelta && candidate._member.size()>_nM)
 		{
+			for (Group& g : _vecGroups) {
+				// if they have the same members
+				if (g._member==candidate._member)
+				{
+					// if they have the same members
+					std::set<Point2I> common_data;
+					set_intersection(candidate._setPoints.begin(), candidate._setPoints.end(), g._setPoints.begin(), g._setPoints.end(),
+						inserter(common_data, common_data.begin()));
+					if (common_data.size())
+					{
+						// if they have common points, then the two candidate should be combined
+						g._setPoints.insert(candidate._setPoints.begin(), candidate._setPoints.end());
+						return;
+					}
+				}
+				else
+				{
+					std::set<int> common_member;
+					set_intersection(candidate._member.begin(), candidate._member.end(), g._member.begin(), g._member.end(),
+						inserter(common_member, common_member.begin()));
+					if (common_member==candidate._member)
+					{
+						// the the members of the candidate is a subset of the group
+						std::set<Point2I> common_data;
+						set_intersection(candidate._setPoints.begin(), candidate._setPoints.end(), g._setPoints.begin(), g._setPoints.end(),
+							inserter(common_data, common_data.begin()));
+						if (common_data.size())
+						{
+							// add the points of the group to the candidate
+							candidate._setPoints.insert(g._setPoints.begin(), g._setPoints.end());
+						}
+					}
+				}
+			}
 			_vecGroups.push_back(candidate);
 		}
 	}

@@ -28,11 +28,12 @@ namespace FIELD2D {
 		}
 	};
 
-
 	struct Group {
 		std::set<int> _member;			// members
 		std::set<Point2I> _setPoints;	// set of points
-		int nSpreadDirections = 0;		// number of remaining spreading directions
+		bool _bAssigned = false;
+		~Group() {
+		}
 	};
 
 	struct Group_1 {
@@ -72,8 +73,12 @@ namespace FIELD2D {
 		//	int _nM = 1;
 		//	int _nDelta = 1;
 
+		// int _nM = 1;
+		// int _nDelta = 1;
+
+
 		int _nM = 3;
-		int _nDelta = 3;
+		int _nDelta = 10;
 
 		// hashtable of calculated trends
 		std::unordered_map<unsigned long, std::vector<int> > _hashTrends;
@@ -81,7 +86,7 @@ namespace FIELD2D {
 		// add Field
 		void AddField(std::vector<double> seq);
 		// initialization
-		void Init(std::vector<std::vector<std::vector<IndexAndValue>>> vectOrderedIndex, double dbEpsilon);
+		void Init(std::vector<std::vector<std::vector<IndexAndValue>>> vectOrderedIndex, double dbEpsilon,int nM,int nDelta);
 		int GetGroupSize();
 		Group GetGroup(int nIndex);
 		double GetValue(int nSeq, int nIndex);

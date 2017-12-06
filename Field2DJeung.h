@@ -22,22 +22,18 @@ namespace FIELD2D {
 		// update the candidate by a cluster, return if this cluster is assigned
 		bool updateCandidate(Group& candidate
 			, std::set<int> cluster
-			, std::vector<Group>& vecCandidatesNew
-			, Point2I ptPos
+			, int nRow
+			, int nCol
 			, int nDirection	// 0:top;1:left
 			);
 
 		// update a grid point
-		void updateGridPoint(std::vector<Group>& vecCandidateTop
-			, std::vector<Group>& vecCandidateLeft
-			, std::vector<std::set<int>> vecClusters
-			, std::vector<Group>& vecCandidatesNew
-			, Point2I ptPos);
+		void updateGridPoint(int nRow,int nCol);
 
 	protected:
 		// cluster at each timestep
 		std::vector<std::vector<std::vector<std::set<int>>>> _vecClusters;
-
+		std::vector<std::vector<std::vector<Group>>> _vecCandidates;
 		
 	};
 

@@ -19,9 +19,10 @@ namespace FIELD2D {
 	// detect the trend
 	void Field2DJeung::TrendDetect() {
 
-
+		// clustering at each grid points
 		clusterAtEachPoint();
 
+		// trend detecting based of the clustered groups at each grid point
 		trendDetectBasedOnGroups();
 
 		// print the result
@@ -31,39 +32,69 @@ namespace FIELD2D {
 
 	void Field2DJeung::clusterAtEachPoint() {
 		for(vector<vector<IndexAndValue>> vecRow:_vectOrderedIndex){	// for each row
-			vector<vector<set<int>>> vecRowC;
+			vector<vector<set<int>>> vecRowC;							// vector of the row
 			for each (vector<IndexAndValue> vecIV in vecRow){			// for each grid point
-				vector<set<int>> vecC;
-				// for each time steps
+				vector<set<int>> vecC;									// vector of the grid
+				set<int> setC;											// one cluster
+				// for each ensemble member
 				for (size_t i = 0; i < _nEns; i++)
 				{
-					if (i == 0 || vecIV[i]._dbValue - vecIV[i - 1]._dbValue>_dbEpsilon)
+					if (i > 0 && vecIV[i]._dbValue - vecIV[i - 1]._dbValue>_dbEpsilon)
 					{
-						// add a new group
-						set<int> setC;
-						setC.insert(vecIV[i]._nIndex);
-						vecC.push_back(setC);
+						if (setC.size()>_nM)
+						{
+							vecC.push_back(setC);
+						}
+						setC.clear();
 					}
-					else {
-						vecC[vecC.size() - 1].insert(vecIV[i]._nIndex);
-					}
+					setC.insert(vecIV[i]._nIndex);
 				}
+				if (setC.size() > _nM) vecC.push_back(setC);
 				vecRowC.push_back(vecC);
 			}
 			_vecClusters.push_back(vecRowC);
 		}
+		return;
+		// print the clusters
+		for (vector<vector<set<int>>> vecRow:_vecClusters)
+		{
+			for (vector<set<int>> vecCol : vecRow) {
+				cout << "[";
+				for (set<int> setC : vecCol) {
+					cout << "(";
+					for (int nIndex : setC) {
+						cout << nIndex << "\t";
+					}
+					cout << ")";
+				}
+				cout << "]";
+				cout << endl;
+			}
+			cout << endl;
+		}
+
 	}
 
 	// add a group gNew to list vecCandidate
 	// remove duplicate
 	void AddGroupToList(Group gNew, vector<Group> &vecCandidate) {
-		for (Group& g : vecCandidate) {
+		for (Group& g : vecCandidate) {			
+			// for each candidate
 			if (g._member == gNew._member)
 			{
-//				if (gNew._nS < g._nS) g._nS = gNew._nS;
-				return;
+				// if they have the same members
+				std::set<Point2I> common_data;
+				set_intersection(gNew._setPoints.begin(), gNew._setPoints.end(), g._setPoints.begin(), g._setPoints.end(),
+					inserter(common_data, common_data.begin()));				
+				if (common_data.size())
+				{
+					// if they have common points, then the two candidate should be combined
+					g._setPoints.insert(gNew._setPoints.begin(), gNew._setPoints.end());
+					return;
+				}
 			}
 		}
+		// add the new candidate
 		vecCandidate.push_back(gNew);
 	}
 
@@ -71,27 +102,17 @@ namespace FIELD2D {
 		// store the candidates during the process of the calculation
 		// for each grid point
 		// initialized empty
-		vector<vector<vector<Group>>> vecCandidates(_nHeight);
+		_vecCandidates.clear();
+		_vecCandidates.resize(_nHeight);
 		for (size_t i = 0; i < _nHeight; i++)
 		{
-			vecCandidates[i].resize(_nWidth);
-		}
-
-		// first grid point -- add the clusters with element more than M to the vector of candidates
-		for (set<int> setC : _vecClusters[0][0]) {
-			if (setC.size()>_nM)
-			{
-				Group g;
-				g._setPoints.insert(Point2I(0, 0));
-				g._member = setC;
-				vecCandidates[0][0].push_back(g);
-			}
+			_vecCandidates[i].resize(_nWidth);
 		}
 
 		// update all the subsequent grid point
-		int nLen = _nWidth;
-		if (_nHeight > _nWidth) nLen = _nHeight;
-		for (size_t i = 1; i < nLen; i++)
+		int nLen = _nWidth+ _nHeight-1;
+
+		for (size_t i = 0; i < nLen; i++)
 		{
 			for (size_t j = 0; j <=i; j++)
 			{
@@ -99,130 +120,17 @@ namespace FIELD2D {
 				int nCol = i - j;
 				if (nRow < _nHeight&&nCol < _nHeight)
 				{
-					vector<Group> emptyTop;
-					vector<Group> emptyLeft;
-					updateGridPoint(nRow == 0 ? emptyTop : vecCandidates[nRow - 1][nCol]
-						, nCol == 0 ? emptyLeft : vecCandidates[nRow][nCol - 1]
-						, _vecClusters[nRow][nCol]
-						, vecCandidates[nRow][nCol]
-						, Point2I(nCol, nRow));
-				}
-
-			}
-		}
-
-
-
-
-		// first Row
-		/*
-		for (size_t i = 1; i < _nWidth; i++)
-		{
-			int nClusters = _vecClusters[0][i].size();
-
-			// set assigned of all the clusters false
-			vector<bool> vecAssigned(nClusters);
-			for (size_t j = 0; j < nClusters; j++)
-			{
-				vecAssigned[j] = false;
-			}
-
-			// for each candidate -- check the intersection with all the clusters
-			for (Group& candidate : vecCandidates[i-1]) {
-				candidate._bAssigned = false;
-				// for each cluster
-				for (int iC = 0; iC < nClusters; iC++) {
-					set<int> setC = _vecClusters[0][i][iC];
-					if (!setC.size() > _nM) continue;
-					vecAssigned[iC]=updateCandidate(candidate, setC, vecCandidates[i],Point2I(0,i));
-				}
-			}
-			// add all the unassigned clusters to the candidate list
-			for (int iC = 0; iC < nClusters; iC++) {
-				if (!vecAssigned[iC] && _vecClusters[0][i][iC].size()>_nM)
-				{
-					Group gNew;
-					gNew._setPoints.insert(Point2I(0, i));
-					gNew._member = _vecClusters[0][i][iC];
-					AddGroupToList(gNew, vecCandidates[i]);
+					updateGridPoint(nRow, nCol);
 				}
 			}
 		}
-		*/
-		/*
-		for (size_t i = 0; i < _nWidth; i++)
-		{
-			for (Group g: vecCandidates[i])
-			{
-				printGroup(g);
-			}
-			cout << endl;
+		for (Group g : _vecCandidates[_nHeight - 1][_nWidth - 1]) {
+			addGroup(g);
 		}
-		*/
-		// subsequent time steps
-		/*
-		for (size_t iRow = 1; iRow < _nHeight; iRow++)
-		{
-			vector<vector<Group>> vecCandidatesNew(_nWidth);
-
-			for (size_t iCol = 0; iCol < _nWidth; iCol++) {
-				int nClusters = _vecClusters[0][iCol].size();
-
-				// set assigned of all the clusters false
-				vector<bool> vecAssigned(nClusters);
-				for (size_t j = 0; j < nClusters; j++)
-				{
-					vecAssigned[j] = false;
-				}
-
-				// for each candidate -- check the intersection with all the clusters
-				vector<Group> vecCandidatesCurrent = vecCandidates[iCol];
-				if (iCol>0)
-				{
-
-
-				}
-				for (Group& candidate : vecCandidates[i - 1]) {
-					candidate._bAssigned = false;
-					// for each cluster
-					for (int iC = 0; iC < nClusters; iC++) {
-						set<int> setC = _vecClusters[0][i][iC];
-						if (!setC.size() > _nM) continue;
-						vecAssigned[iC] = updateCandidate(candidate, setC, vecCandidates[i], Point2I(0, i));
-					}
-				}
-				// add all the unassigned clusters to the candidate list
-				for (int iC = 0; iC < nClusters; iC++) {
-					if (!vecAssigned[iC] && _vecClusters[0][i][iC].size()>_nM)
-					{
-						Group gNew;
-						gNew._setPoints.insert(Point2I(0, i));
-						gNew._member = _vecClusters[0][i][iC];
-						AddGroupToList(gNew, vecCandidates[i]);
-					}
-				}
-			}
-		}
-
-
-		// add all the unassigend candidate to the group list
-		for (vector<Group> vecCandidate : vecCandidates) {
-			for (Group candidate : vecCandidate) {
-				if (!candidate._bAssigned)
-				{
-					addGroup(candidate);
-				}
-			}
-		}*/
 	}
 
-	void Field2DJeung::updateGridPoint(std::vector<Group>& vecCandidateTop
-		, std::vector<Group>& vecCandidateLeft
-		, std::vector<std::set<int>> vecClusters
-		, std::vector<Group>& vecCandidatesNew
-		, Point2I ptPos) {
-		int nRow = ptPos._nY;
-		int nCol = ptPos._nX;
+	void Field2DJeung::updateGridPoint(int nRow,int nCol) 
+	{
 		int nClusters = _vecClusters[nRow][nCol].size();
 
 		// set assigned of all the clusters false
@@ -232,17 +140,38 @@ namespace FIELD2D {
 			vecAssigned[j] = false;
 		}
 
-		// for each cluster
-		for (int iC = 0; iC < nClusters; iC++) {
-			set<int> setC = _vecClusters[nRow][nCol][iC];
-			if (!setC.size() > _nM) continue;
-			// for each candidate -- check the intersection with all the clusters
-			for (Group& candidate : vecCandidateTop) {
-				vecAssigned[iC] = updateCandidate(candidate, setC, vecCandidatesNew, Point2I(nCol, nRow),0);
+		// merge candidate
+		std::vector<Group> candidates;
+		if (nRow>0)
+		{
+			for (Group& candidate : _vecCandidates[nRow - 1][nCol]) {
+				candidates.push_back(candidate);
 			}
-			for (Group& candidate : vecCandidateLeft) {
-				vecAssigned[iC] = updateCandidate(candidate, setC, vecCandidatesNew, Point2I(nCol, nRow),1);
+
+		}
+		if (nCol>0)
+		{
+			for (Group& candidate : _vecCandidates[nRow][nCol - 1]) {
+				candidates.push_back(candidate);
 			}
+		}
+		// for each candidate
+		for (Group& candidate : candidates) {
+			candidate._bAssigned = false;
+			// for each cluster
+			for (int iC = 0; iC < nClusters; iC++) {
+				set<int> setC = _vecClusters[nRow][nCol][iC];
+				if (updateCandidate(candidate, setC, nRow, nCol, 0))
+				{
+					vecAssigned[iC] = true;
+				}
+			}
+			// if this candidate is not assigend, add it to the group list
+			if (!candidate._bAssigned)
+			{
+				addGroup(candidate);
+			}
+
 		}
 		// add all the unassigned clusters to the candidate list
 		for (int iC = 0; iC < nClusters; iC++) {
@@ -251,37 +180,48 @@ namespace FIELD2D {
 				Group gNew;
 				gNew._setPoints.insert(Point2I(nCol, nRow));
 				gNew._member = _vecClusters[nRow][nCol][iC];
-				AddGroupToList(gNew, vecCandidatesNew);
+				AddGroupToList(gNew, _vecCandidates[nRow][nCol]);
 			}
 		}
 	}
 
-	bool Field2DJeung::updateCandidate(Group& candidate, std::set<int> setC, std::vector<Group>& vecCandidatesNew, Point2I ptPos
+	bool Field2DJeung::updateCandidate(Group& candidate
+		, std::set<int> setC
+		, int nRow
+		, int nCol
 		, int nDirection){
+
+		candidate._bAssigned = false;
+
+		bool bResult = false;
 		// calculate intersection
 		std::set<int> common_data;
-		set_intersection(setC.begin(), setC.end(), candidate._member.begin(), candidate._member.end(),
-			inserter(common_data, common_data.begin()));
+		set_intersection(setC.begin(), setC.end(), candidate._member.begin(), candidate._member.end(),inserter(common_data, common_data.begin()));
 		if (common_data.size() > _nM)
 		{
 			if (common_data == candidate._member)
 			{
 				// prolong the candidate
-				candidate._setPoints.insert(ptPos);
-				AddGroupToList(candidate, vecCandidatesNew);
+				candidate._setPoints.insert(Point2I(nCol,nRow));
+				AddGroupToList(candidate, _vecCandidates[nRow][nCol]);
+				candidate._bAssigned = true;
 			}
 			else {
 				// add new candidate for the intersection
 				Group gNew;
-				gNew._setPoints.insert(ptPos);
+				gNew._setPoints = candidate._setPoints;
+				gNew._setPoints.insert(Point2I(nCol, nRow));
 				gNew._member = common_data;
-				AddGroupToList(gNew, vecCandidatesNew);
-				//vecCandidatesNew.push_back(gNew);
+				AddGroupToList(gNew, _vecCandidates[nRow][nCol]);								
 			}
 			if (common_data == setC)
 			{
-				return true;
+				bResult = true;
 			}
+		}
+		if (!candidate._bAssigned)
+		{
+			addGroup(candidate);
 		}
 		
 		// old version
@@ -314,6 +254,6 @@ namespace FIELD2D {
 			}
 		}
 		*/
-		return false;
+		return bResult;
 	}
 }
