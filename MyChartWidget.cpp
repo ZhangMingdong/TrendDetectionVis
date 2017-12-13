@@ -19,22 +19,16 @@
 
 #define BUFSIZE 512
 
-#define USE_ARTIFICIAL
-//#define USE_GDP
+//#define USE_ARTIFICIAL
+#define USE_GDP
 
 
 #ifdef USE_ARTIFICIAL
 const double g_dbScaleW = 2;
 const double g_dbScaleH = 1;
-const double g_dbEpsilon = 5;
-const double g_nDelta = 1;
-const double g_nM = 1;
 #else
 const double g_dbScaleW = .05;
 const double g_dbScaleH = .03;
-const double g_dbEpsilon = .5;
-const double g_nDelta = 10;
-const double g_nM = 5;
 #endif
 
 
@@ -48,8 +42,6 @@ MyChartWidget::MyChartWidget(QWidget *parent)
 //	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Buchin);
 //	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Van);
 	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Jeung);
-
-
 }
 
 MyChartWidget::~MyChartWidget()
@@ -92,8 +84,8 @@ void MyChartWidget::paint() {
 	drawGridLines();
 
 	// draw selected group
-	drawSelectedGroup();
-	drawSelectedDBGroup();
+//	drawSelectedGroup();
+//	drawSelectedDBGroup();
 
 	// draww abstracted groups
 	drawGroups();
@@ -113,32 +105,12 @@ void MyChartWidget::SetModelE(MeteModel* pModelE) {
 #ifdef USE_ARTIFICIAL
 //	generateSequenceArtificial1();
 //	generateSequenceArtificial2();
-	generateSequenceArtificial3();
+//	generateSequenceArtificial3();
+	generateSequenceArtificial4();
 #else	
 #ifdef USE_GDP	
-	// use gdp data
-	QFile file("data\\Industry (p of GDP).csv"); // this is a name of a file text1.txt sent from main method
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		return;
-	}
-	QTextStream in(&file);
-	QString line = in.readLine();
-	vector<vector<double>> vecData;
-	while (!line.isNull())
-	{
-		vector<double> seq;
-		QStringList list = line.split(",");
-		for (size_t i = 0, length = list.size() - 1; i < length; i++)
-		{
-			if (list[i].isEmpty()) seq.push_back(-1);
-			else seq.push_back(list[i].toDouble());
-		}
-		vecData.push_back(seq);
-		line = in.readLine();
-	}
 
-	generateSequences(vecData);
+	generateGDPSequences();
 #else 
 
 	// use ensembles
@@ -146,7 +118,7 @@ void MyChartWidget::SetModelE(MeteModel* pModelE) {
 	_pModelE = pModelE;
 
 	// generate the sequences
-	generateSequences();
+	generateEnsembleSequences();
 
 #endif
 
@@ -177,32 +149,6 @@ void MyChartWidget::mouseDoubleClickEvent(QMouseEvent *event) {
 	updateGL();
 }
 
-void MyChartWidget::generateSequences() {
-	int nWidth = _pModelE->GetW();
-	int nHeight = _pModelE->GetH();
-	int nEns = _pModelE->GetEnsembleLen();
-//	nEns = 5;
-	// calculate the max and min height
-	double dbMin = 1000;
-	double dbMax = 0;
-	for (size_t i = 0; i < nEns; i++)
-	{
-		vector<double> seq;
-		for (size_t j = 0; j < nWidth; j++)
-		{
-			double dbValue = _pModelE->GetData()->GetData(i, nHeight - 1, j);
-			if (dbValue > dbMax) dbMax = dbValue;
-			if (dbValue < dbMin) dbMin = dbValue;
-
-			seq.push_back(dbValue);
-		}
-		//		if(i==0|| i == 1 || i == 2 || i == 3 || i == 4 || i==5||i==8)
-		_pSequence->AddSequence(seq);
-	}
-
-
-	_pSequence->Init(nWidth, dbMin, dbMax, g_dbEpsilon, g_nDelta, g_nM);
-}
 
 void MyChartWidget::drawGroups() {
 	for (size_t i = 0; i < _pSequence->GetGroupSize(); i++)
@@ -399,13 +345,69 @@ void MyChartWidget::drawSelectedDBGroup() {
 	}
 }
 
-void MyChartWidget::generateSequences(std::vector<std::vector<double>> vecData) {
+//#define ALL_LINES
+void MyChartWidget::generateEnsembleSequences() {
+	int nWidth = _pModelE->GetW();
+	int nHeight = _pModelE->GetH();
+	int nEns = _pModelE->GetEnsembleLen();
+	vector<vector<double>> vecSeq;
+	for (size_t i = 0; i < nEns; i++)
+	{
+#ifdef ALL_LINES
+		for (size_t iRow = 0; iRow < nHeight; iRow++)
+		{
+			vector<double> seq;
+			for (size_t j = 0; j < nWidth; j++)
+			{
+				double dbValue = _pModelE->GetData()->GetData(i, iRow, j) + iRow * 40;
+				seq.push_back(dbValue);
+			}
+			vecSeq.push_back(seq);
+		}
+#else 
+		vector<double> seq;
+		for (size_t j = 0; j < nWidth; j++)
+		{
+			double dbValue = _pModelE->GetData()->GetData(i, nHeight - 1, j);
+			seq.push_back(dbValue);
+		}
+		vecSeq.push_back(seq);
+#endif
+	}
+	double dbEpsilon = 1.0;
+	int nDelta = 10;
+	int nM = 5;
+	_pSequence->Init(vecSeq, dbEpsilon, nDelta, nM);
+}
+
+void MyChartWidget::generateGDPSequences() {
+	// use gdp data
+	//QFile file("data\\Industry (p of GDP).csv"); 
+	QFile file("data\\Agriculture (p of GDP).csv");
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		return;
+	}
+	QTextStream in(&file);
+	QString line = in.readLine();
+	vector<vector<double>> vecData;
+	while (!line.isNull())
+	{
+		vector<double> seq;
+		QStringList list = line.split(",");
+		for (size_t i = 0, length = list.size() - 1; i < length; i++)
+		{
+			if (list[i].isEmpty()) seq.push_back(-1);
+			else seq.push_back(list[i].toDouble());
+		}
+		vecData.push_back(seq);
+		line = in.readLine();
+	}
+
+
 	int nLen = vecData[0].size();
 	int nEns = vecData.size();
 
-	// calculate the max and min height
-	double dbMin = 1000;
-	double dbMax = 0;
 	for (int i = nEns-1; i >=0 ; i--)
 	{
 		int nFirstValidIndex = -1;
@@ -417,8 +419,6 @@ void MyChartWidget::generateSequences(std::vector<std::vector<double>> vecData) 
 			{
 				nValidCount++;
 				if (nFirstValidIndex < 0) nFirstValidIndex = j;
-				if (dbValue > dbMax) dbMax = dbValue;
-				if (dbValue < dbMin) dbMin = dbValue;
 			}
 			else if(nFirstValidIndex>-1)
 				vecData[i][j] = vecData[i][j - 1];
@@ -435,14 +435,12 @@ void MyChartWidget::generateSequences(std::vector<std::vector<double>> vecData) 
 	nEns = vecData.size();
 	cout << "number of sequences: " << nEns << endl;
 
-	for each (vector<double> seq in vecData)
-	{
-		_pSequence->AddSequence(seq);
-	}
 
+	double dbEpsilon = 1.0;
+	double nDelta = 2;
+	double nM = 2;
+	_pSequence->Init(vecData,dbEpsilon,nDelta,nM);
 
-
-	_pSequence->Init(nLen, dbMin, dbMax, g_dbEpsilon, g_nDelta, g_nM);
 }
 
 void MyChartWidget::generateSequenceArtificial1() {
@@ -454,27 +452,23 @@ void MyChartWidget::generateSequenceArtificial1() {
 	};
 	int nEns = 4;
 	int nLen = 8;
-	double dbEpsilon = .4;
-	// calculate the max and min height
-	double dbMin = 1000;
-	double dbMax = 0;
+
+	vector<vector<double>> vecSequence;
 	for (size_t i = 0; i < nEns; i++)
 	{
 		vector<double> seq;
 		for (size_t j = 0; j < nLen; j++)
 		{
 			double dbValue = arrData[i][j];
-			if (dbValue > dbMax) dbMax = dbValue;
-			if (dbValue < dbMin) dbMin = dbValue;
-
 			seq.push_back(dbValue);
 		}
-		//		if(i==0|| i == 1 || i == 2 || i == 3 || i == 4 || i==5||i==8)
-		_pSequence->AddSequence(seq);
+		vecSequence.push_back(seq);
 	}
 
-
-	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon, g_nDelta, g_nM);
+	double dbEpsilon = .6;
+	int nDelta = 0;
+	int nM = 1;
+	_pSequence->Init(vecSequence, dbEpsilon, nDelta, nM);
 }
 
 void MyChartWidget::generateSequenceArtificial2() {
@@ -488,49 +482,34 @@ void MyChartWidget::generateSequenceArtificial2() {
 	};
 	int nEns = 5;
 	int nLen = 8;
-	double dbEpsilon = .1;
-	// calculate the max and min height
-	double dbMin = 1000;
-	double dbMax = 0;
+
+
+	vector<vector<double>> vecSequence;
 	for (size_t i = 0; i < nEns; i++)
 	{
 		vector<double> seq;
 		for (size_t j = 0; j < nLen; j++)
 		{
 			double dbValue = arrData[i][j];
-			if (dbValue > dbMax) dbMax = dbValue;
-			if (dbValue < dbMin) dbMin = dbValue;
-
 			seq.push_back(dbValue);
 		}
-		//		if(i==0|| i == 1 || i == 2 || i == 3 || i == 4 || i==5||i==8)
-		_pSequence->AddSequence(seq);
+		vecSequence.push_back(seq);
 	}
 
-
-	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon, g_nDelta, g_nM);
+	double dbEpsilon = .1;
+	int nDelta = 0;
+	int nM = 1;
+	_pSequence->Init(vecSequence, dbEpsilon, nDelta, nM);
 }
 
 void MyChartWidget::generateSequenceArtificial3() {
+
 	double arrData[10][20];
 
 	int nEns = 10;
 	int nLen = 20;
 	int nGradeMin = 0;
 	int nGradeMax = 10;
-
-//	nEns = 5;
-//	nLen = 5;
-//	nGradeMax = 2;
-
-//	nEns = 10;
-//	nLen = 10;
-//	nGradeMax = 10;
-
-
-
-
-
 
 	int nLastGrade = 0;
 	for (size_t i = 0; i < nEns; i++)
@@ -561,27 +540,52 @@ void MyChartWidget::generateSequenceArtificial3() {
 			arrData[i][j] = nLastGrade + dbDist;
 		}
 	}
-	double dbEpsilon = .1;
-	// calculate the max and min height
-	double dbMin = 1000;
-	double dbMax = 0;
+
+	vector<vector<double>> vecSequence;
 	for (size_t i = 0; i < nEns; i++)
 	{
 		vector<double> seq;
 		for (size_t j = 0; j < nLen; j++)
 		{
 			double dbValue = arrData[i][j];
-			if (dbValue > dbMax) dbMax = dbValue;
-			if (dbValue < dbMin) dbMin = dbValue;
-
 			seq.push_back(dbValue);
 		}
-		//		if(i==0|| i == 1 || i == 2 || i == 3 || i == 4 || i==5||i==8)
-		_pSequence->AddSequence(seq);
+		vecSequence.push_back(seq);
 	}
 
+	double dbEpsilon = .1;
+	int nDelta = 1;
+	int nM = 1;
+	_pSequence->Init(vecSequence,dbEpsilon,nDelta,nM);
 
-	_pSequence->Init(nLen, dbMin, dbMax, dbEpsilon,g_nDelta,g_nM);
+}
+
+
+void MyChartWidget::generateSequenceArtificial4() {
+	double arrData[3][4] = {
+		{ 0.1,0.1,0.1,0.1},
+		{ 0.2,0.2,0.2,0.2},
+		{ 1.3,0.3,0.3,2.3}
+	};
+	int nEns = 3;
+	int nLen = 4;
+
+	vector<vector<double>> vecSequence;
+	for (size_t i = 0; i < nEns; i++)
+	{
+		vector<double> seq;
+		for (size_t j = 0; j < nLen; j++)
+		{
+			double dbValue = arrData[i][j];
+			seq.push_back(dbValue);
+		}
+		vecSequence.push_back(seq);
+	}
+
+	double dbEpsilon = .6;
+	int nDelta = 0;
+	int nM = 1;
+	_pSequence->Init(vecSequence, dbEpsilon, nDelta, nM);
 }
 
 void MyChartWidget::drawEvents() {

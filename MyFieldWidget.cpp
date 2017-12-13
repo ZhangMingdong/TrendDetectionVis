@@ -19,20 +19,11 @@
 
 #define BUFSIZE 512
 
-#define USE_ARTIFICIAL
+//#define USE_ARTIFICIAL
 
 
 
-#ifdef USE_ARTIFICIAL
-//const double g_dbEpsilon = .5;
-const double g_dbEpsilon = 2.0;
-const int g_nM = 1;
-const int g_nDelta = 1;
-#else
-const double g_dbEpsilon = .5;
-const int g_nM = 3;
-const int g_nDelta = 10;
-#endif
+
 
 
 
@@ -142,7 +133,7 @@ void MyFieldWidget::generateField() {
 	double arrData[3][3][3] = {
 		{ { 1,2,3 },{ 1,2,3 },{ 1,2,3 } },
 		{ { 1,2,3 },{ 1,2,5 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,4,5 },{ 1,4,5 } }
+		{ { 1,2,3 },{ 1,2,3 },{ 1,2,3 } }
 	};
 	vector<vector<vector<IndexAndValue>>> vecData;
 	for (size_t i = 0; i < _nGridHeight; i++)
@@ -190,7 +181,7 @@ void MyFieldWidget::generateField() {
 	_pField->Init(vecData, dbEpsilon,nM,nDelta);
 	*/
 
-
+	/*
 	_nGridWidth = 5;
 	_nGridHeight = 5;
 	_nEns = 3;
@@ -217,15 +208,62 @@ void MyFieldWidget::generateField() {
 			}
 			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
 			vecRow.push_back(vecIV);
-}
+		}
 		vecData.push_back(vecRow);
 	}
 	_pField->Init(vecData, dbEpsilon, nM, nDelta);
+	*/
+
+	//*
+	//10*10*10 random data
+	_nGridWidth = 10;
+	_nGridHeight = 10;
+	_nEns = 10;
+	int nM = 4;
+	int nDelta = 1;
+	double dbEpsilon = 1.0;
+	vector<vector<vector<IndexAndValue>>> vecData;
+	for (size_t i = 0; i < _nGridHeight; i++)
+	{
+		vector<vector<IndexAndValue>> vecRow;
+		for (size_t j = 0; j < _nGridWidth; j++)
+		{
+			vector<IndexAndValue> vecIV;
+			for (size_t k = 0; k < _nEns; k++)
+			{
+				vecIV.push_back(IndexAndValue(k, rand() / double(RAND_MAX)*10.0));
+			}
+			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
+			vecRow.push_back(vecIV);
+		}
+		vecData.push_back(vecRow);
+	}
+	_pField->Init(vecData, dbEpsilon, nM, nDelta);
+	//*/
 #else
 	// ensemble
-	_nGridWidth = 20;// _pModelE->GetW();
-	_nGridHeight = 20;// _pModelE->GetH();
+	_nGridWidth =  _pModelE->GetW();
+	_nGridHeight =  _pModelE->GetH();
 	_nEns = _pModelE->GetEnsembleLen();
+
+	double dbEpsilon = .5;
+	int nM = 15;
+	int nDelta = 5;
+
+
+	if (true)
+	{
+		_nGridWidth = 10;// _pModelE->GetW();
+		_nGridHeight = 10;// _pModelE->GetH();
+		_nEns = 20;// _pModelE->GetEnsembleLen();
+	}
+	if (false)
+	{
+		_nGridWidth = 20;// _pModelE->GetW();
+		_nGridHeight = 20;// _pModelE->GetH();
+		_nEns = 50;// _pModelE->GetEnsembleLen();
+	}
+
 	vector<vector<vector<IndexAndValue>>> vecData;
 	for (size_t i = 0; i < _nGridHeight; i++)
 	{
@@ -242,7 +280,7 @@ void MyFieldWidget::generateField() {
 		}
 		vecData.push_back(vecRow);
 	}
-	_pField->Init(vecData, g_dbEpsilon, g_nM, g_nDelta);
+	_pField->Init(vecData, dbEpsilon, nM, nDelta);
 #endif
 }
 

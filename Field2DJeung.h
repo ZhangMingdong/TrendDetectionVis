@@ -20,20 +20,22 @@ namespace FIELD2D {
 		void trendDetectBasedOnGroups();
 
 		// update the candidate by a cluster, return if this cluster is assigned
-		bool updateCandidate(Group& candidate
+		bool updateCandidate(Group* pCandidate
 			, std::set<int> cluster
 			, int nRow
 			, int nCol
-			, int nDirection	// 0:top;1:left
 			);
 
 		// update a grid point
 		void updateGridPoint(int nRow,int nCol);
 
+		// add a candidate
+		void addCandidate(Group* pCandidate);
 	protected:
 		// cluster at each timestep
-		std::vector<std::vector<std::vector<std::set<int>>>> _vecClusters;
-		std::vector<std::vector<std::vector<Group>>> _vecCandidates;
+		std::vector<std::vector<std::vector<std::set<int>>>> _vecClusters;		// clusters at each grid point
+		std::vector<std::vector<std::vector<Group*>>> _vecGridCandidates;		// pointer of clusters of each grid point
+		std::vector<Group*> _vecCandidates;										// vector of candidates pointer
 		
 	};
 

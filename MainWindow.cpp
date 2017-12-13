@@ -20,7 +20,7 @@
 #include "DisplayCtrlWidget.h"
 
 // using field if defined, otherwise use sequence
-#define FIELD_2D
+//#define FIELD_2D
 
 
 

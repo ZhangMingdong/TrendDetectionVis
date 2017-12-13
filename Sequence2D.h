@@ -70,22 +70,14 @@ protected:
 	std::vector<Group> _vecGroups;
 	// trend detecting parameters
 	double _dbEpsilon = 0;
-//	int _nM = 2;
-//	int _nDelta = 5;
-
 	int _nM = 1;
 	int _nDelta = 1;
-
-//	int _nM = 5;
-//	int _nDelta = 10;
 
 	// hashtable of calculated trends
 	std::unordered_map<unsigned long, std::vector<int> > _hashTrends;
 public:
-	// add sequence
-	void AddSequence(std::vector<double> seq);
 	// initialization
-	void Init(int nLength, double dbMin, double dbMax, double dbEpsilon,int nDelta,int nM);
+	void Init(std::vector<std::vector<double>> vecSeq, double dbEpsilon,int nDelta,int nM);
 	int GetGroupSize();
 	Group GetGroup(int nIndex);
 	double GetValue(int nSeq, int nIndex);

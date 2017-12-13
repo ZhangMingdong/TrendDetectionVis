@@ -50,15 +50,19 @@ protected:
 	void drawSelectedDBGroup();
 
 	// generate sequences for trend detection -- ensembles
-	void generateSequences();
+	void generateEnsembleSequences();
 
 	// genereate sequences from the data -- GDPs
-	void generateSequences(std::vector<std::vector<double>> vecData);
+	void generateGDPSequences();
 
 	// generate artificial data
 	void generateSequenceArtificial1();
 	void generateSequenceArtificial2();
 	void generateSequenceArtificial3();
+
+	// data set to show the duplicate candidate
+	// 2017/12/08
+	void generateSequenceArtificial4();
 
 
 };

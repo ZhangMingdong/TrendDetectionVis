@@ -3,13 +3,14 @@
 #include <iostream>
 #include <ctime>
 #include <iterator>
+#include <fstream>
 
-//#include "Field2DBuchin.h"
-//#include "Field2DVan.h"
 #include "Field2DJeung.h"
 
 using namespace std;
 
+
+ofstream result("result.txt");
 
 namespace FIELD2D {
 	// cluster comparison function, used for sort
@@ -24,11 +25,7 @@ namespace FIELD2D {
 	Field2D::~Field2D()
 	{
 	}
-
-	void Field2D::AddField(std::vector<double> seq) {
-		_vecFields.push_back(seq);
-	}
-
+	
 	void Field2D::Init(std::vector<std::vector<std::vector<IndexAndValue>>> vectOrderedIndex, double dbEpsilon, int nM, int nDelta) {
 		_vectOrderedIndex = vectOrderedIndex;
 		_nHeight = vectOrderedIndex.size();
@@ -41,6 +38,7 @@ namespace FIELD2D {
 	}
 
 	void Field2D::printGroup() {
+
 		cout << "number of detected trends: " << _vecGroups.size() << endl;
 		for each (Group g in _vecGroups)
 		{
@@ -50,20 +48,23 @@ namespace FIELD2D {
 
 
 	void Field2D::printGroup(const Group& g) {
-
-		//			cout << "(" << g._nS << "," << g._nE << "):";
 		cout << "Grid points: ";
+		result<< "Grid points: ";
 		for (Point2I pt:g._setPoints)
 		{
 			cout << "(" << pt._nX << "," << pt._nY << "),";
+			result << "(" << pt._nX << "," << pt._nY << "),";
 		}
 
 		cout << "\nMembers: ";
+		result << "\nMembers: ";
 		for each (int nMember in g._member)
 		{
 			cout << nMember << ",";
+			result << nMember << ",";
 		}
 		cout << endl;
+		result << endl;
 	}
 
 	void Field2D::addGroup(Group candidate) {
