@@ -48,122 +48,22 @@ Sequence2D::~Sequence2D()
 {
 }
 
-void Sequence2D::AddSequence(std::vector<double> seq) {
-	_vecSequences.push_back(seq);
-}
-
-void Sequence2D::Init(int nLength, double dbMin, double dbMax, double dbEpsilon, int nDelta, int nM) {
-	_nLength = nLength;
-	_dbMin = dbMin;
-	_dbMax = dbMax;
+void Sequence2D::Init(std::vector<std::vector<double>> vecSeq, double dbEpsilon, int nDelta, int nM) {
+	_vecSequences = vecSeq;
 	_dbEpsilon = dbEpsilon;
-	_nEns = _vecSequences.size();
-
 	_nDelta = nDelta;
 	_nM = nM;
-
-	/*
-	// based on the first element
-	_dbMin = 1000;
+	_nEns = _vecSequences.size();
+	_nLength = _vecSequences.size() > 0 ? _vecSequences[0].size() : 0;
 	_dbMax = -1000;
-	for (size_t i = 1; i < _nEns; i++)
-	{
-		for (size_t j = 0; j < _nLength; j++) {
-			_vecSequences[i][j] -= _vecSequences[0][j];
-			if (_vecSequences[i][j] > _dbMax) _dbMax = _vecSequences[i][j];
-			if (_vecSequences[i][j] < _dbMin) _dbMin = _vecSequences[i][j];
-		}
-	}
-	for (size_t j = 0; j < _nLength; j++) {
-		_vecSequences[0][j] = 0;
-	}
-	*/
-
-	/*
-	// based on the median element
-	vector<vector<IndexAndValue>> vectOrderedIndex;
-	// for each time steps
-	for (size_t i = 0; i < _nLength; i++)
-	{
-		// add each index and its value
-		vector<IndexAndValue> vecIndices;
-		for (size_t j = 0; j < _nEns; j++)
-		{
-			vecIndices.push_back(IndexAndValue(j, _vecSequences[j][i]));
-		}
-
-		// sort them
-		sort(vecIndices.begin(), vecIndices.end(), IndexAndValueCompare);
-
-		// add to the vector
-		vectOrderedIndex.push_back(vecIndices);
-	}
-	int nCenterIndex=0;
-	int nCenterCount = 0;
-	vector<int> vecCount;
-	for (size_t i = 0; i < _nEns; i++) vecCount.push_back(0);
-
-	for (size_t i = 0; i < _nLength; i++)
-	{
-		int nCenter1 = vectOrderedIndex[i][_nEns / 2]._nIndex;
-		int nCenter2 = vectOrderedIndex[i][_nEns / 2 + 1]._nIndex;
-		vecCount[nCenter1]++;
-		vecCount[nCenter2]++;
-		if (vecCount[nCenter1] > nCenterCount)
-		{
-			nCenterCount = vecCount[nCenter1];
-			nCenterIndex = nCenter1;
-		}
-		if (vecCount[nCenter2] > nCenterCount)
-		{
-			nCenterCount = vecCount[nCenter2];
-			nCenterIndex = nCenter2;
-		}
-		
-	}
-
-
 	_dbMin = 1000;
-	_dbMax = -1000;
-	for (size_t i = 0; i < _nEns; i++)
+	for (vector<double> vec :vecSeq)
 	{
-		if (i!=nCenterIndex)
-		{
-			for (size_t j = 0; j < _nLength; j++) {
-				_vecSequences[i][j] -= _vecSequences[nCenterIndex][j];
-				if (_vecSequences[i][j] > _dbMax) _dbMax = _vecSequences[i][j];
-				if (_vecSequences[i][j] < _dbMin) _dbMin = _vecSequences[i][j];
-			}
-
+		for (double dbV : vec) {
+			if (dbV > _dbMax) _dbMax = dbV;
+			if (dbV < _dbMin) _dbMin = dbV;
 		}
 	}
-	for (size_t j = 0; j < _nLength; j++) {
-		_vecSequences[nCenterIndex][j] = 0;
-	}
-	*/
-
-	/*
-	// based on the mean at each timestep
-	// normalization
-	_dbMin = 1000;
-	_dbMax = -1000;
-
-	for (size_t j = 0; j < _nLength; j++) {
-		double dbMean = 0;
-		for (size_t i = 0; i < _nEns; i++)
-		{
-			dbMean+= _vecSequences[i][j];
-		}
-		dbMean /= _nEns;
-		for (size_t i = 0; i < _nEns; i++)
-		{
-			_vecSequences[i][j] -= dbMean;
-			if (_vecSequences[i][j] > _dbMax) _dbMax = _vecSequences[i][j];
-			if (_vecSequences[i][j] < _dbMin) _dbMin = _vecSequences[i][j];
-		}
-
-	}
-	*/
 }
 
 void Sequence2D::TrendDetectRootOnly() {
@@ -186,6 +86,7 @@ void Sequence2D::TrendDetectRootOnly() {
 
 void Sequence2D::printGroup() {
 	cout << "number of detected trends: " << _vecGroups.size() << endl;
+	return;
 	for each (Group g in _vecGroups)
 	{
 		cout << "(" << g._nS << "," << g._nE << "):";

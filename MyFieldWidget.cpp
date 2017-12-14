@@ -6,7 +6,6 @@
 #include <iostream>
 
 
-#include "MeteModel.h"
 #include "LayerLayout.h"
 #include "DataField.h"
 #include "ColorMap.h"
@@ -19,20 +18,11 @@
 
 #define BUFSIZE 512
 
-#define USE_ARTIFICIAL
+//#define USE_ARTIFICIAL
 
 
 
-#ifdef USE_ARTIFICIAL
-//const double g_dbEpsilon = .5;
-const double g_dbEpsilon = 2.0;
-const int g_nM = 1;
-const int g_nDelta = 1;
-#else
-const double g_dbEpsilon = .5;
-const int g_nM = 3;
-const int g_nDelta = 10;
-#endif
+
 
 
 
@@ -114,13 +104,10 @@ void MyFieldWidget::init() {
 
 }
 
-void MyFieldWidget::SetModelE(MeteModel* pModelE) {	
+void MyFieldWidget::SetModelE() {	
 
 	// use ensembles
 	// set model
-	_pModelE = pModelE;
-
-
 
 	// generate the field
 	generateField();
@@ -129,121 +116,7 @@ void MyFieldWidget::SetModelE(MeteModel* pModelE) {
 
 
 void MyFieldWidget::generateField() {
-#ifdef USE_ARTIFICIAL
-	// artificial
 
-	/*
-	_nGridWidth = 3;
-	_nGridHeight = 3;
-	_nEns = 3;
-	int nM = 1;
-	int nDelta = 1;
-	double dbEpsilon = 2;
-	double arrData[3][3][3] = {
-		{ { 1,2,3 },{ 1,2,3 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,2,5 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,4,5 },{ 1,4,5 } }
-	};
-	vector<vector<vector<IndexAndValue>>> vecData;
-	for (size_t i = 0; i < _nGridHeight; i++)
-	{
-		vector<vector<IndexAndValue>> vecRow;
-		for (size_t j = 0; j < _nGridWidth; j++)
-		{
-			vector<IndexAndValue> vecIV;
-			for (size_t k = 0; k < _nEns; k++)
-			{
-				vecIV.push_back(IndexAndValue(k, arrData[i][j][k]));
-			}
-			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
-			vecRow.push_back(vecIV);
-		}
-		vecData.push_back(vecRow);
-	}
-	_pField->Init(vecData, dbEpsilon, nM, nDelta);
-	*/
-
-	/*
-	//5*5 random data
-	_nGridWidth = 5;
-	_nGridHeight = 5;
-	_nEns = 5;
-	int nM = 1;
-	int nDelta = 1;
-	double dbEpsilon = 2;
-	vector<vector<vector<IndexAndValue>>> vecData;
-	for (size_t i = 0; i < _nGridHeight; i++)
-	{
-		vector<vector<IndexAndValue>> vecRow;
-		for (size_t j = 0; j < _nGridWidth; j++)
-		{
-			vector<IndexAndValue> vecIV;
-			for (size_t k = 0; k < _nEns; k++)
-			{
-				vecIV.push_back(IndexAndValue(k, rand() / double(RAND_MAX)*5.0));
-			}
-			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
-			vecRow.push_back(vecIV);
-		}
-		vecData.push_back(vecRow);
-	}
-	_pField->Init(vecData, dbEpsilon,nM,nDelta);
-	*/
-
-
-	_nGridWidth = 5;
-	_nGridHeight = 5;
-	_nEns = 3;
-	int nM = 1;
-	int nDelta = 1;
-	double dbEpsilon = 2;
-	double arrData[5][5][3] = {
-		{ { 1,2,3 },{ 1,2,3 },{ 1,5,9 },{ 1,2,3 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,2,3 },{ 1,5,9 },{ 1,2,3 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,2,3 },{ 1,5,6 },{ 1,2,3 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,2,3 },{ 1,5,9 },{ 1,2,3 },{ 1,2,3 } },
-		{ { 1,2,3 },{ 1,2,3 },{ 1,5,9 },{ 1,2,3 },{ 1,2,3 } }
-	};
-	vector<vector<vector<IndexAndValue>>> vecData;
-	for (size_t i = 0; i < _nGridHeight; i++)
-	{
-		vector<vector<IndexAndValue>> vecRow;
-		for (size_t j = 0; j < _nGridWidth; j++)
-		{
-			vector<IndexAndValue> vecIV;
-			for (size_t k = 0; k < _nEns; k++)
-			{
-				vecIV.push_back(IndexAndValue(k, arrData[i][j][k]));
-			}
-			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
-			vecRow.push_back(vecIV);
-}
-		vecData.push_back(vecRow);
-	}
-	_pField->Init(vecData, dbEpsilon, nM, nDelta);
-#else
-	// ensemble
-	_nGridWidth = 20;// _pModelE->GetW();
-	_nGridHeight = 20;// _pModelE->GetH();
-	_nEns = _pModelE->GetEnsembleLen();
-	vector<vector<vector<IndexAndValue>>> vecData;
-	for (size_t i = 0; i < _nGridHeight; i++)
-	{
-		vector<vector<IndexAndValue>> vecRow;
-		for (size_t j = 0; j < _nGridWidth; j++)
-		{
-			vector<IndexAndValue> vecIV;
-			for (size_t k = 0; k < _nEns; k++)
-			{
-				vecIV.push_back(IndexAndValue(k, _pModelE->GetData()->GetData(k, i, j)));
-			}
-			sort(vecIV.begin(), vecIV.end(), IndexAndValueCompare);
-			vecRow.push_back(vecIV);
-		}
-		vecData.push_back(vecRow);
-	}
-	_pField->Init(vecData, g_dbEpsilon, g_nM, g_nDelta);
-#endif
 }
 
 void MyFieldWidget::mouseDoubleClickEvent(QMouseEvent *event) {

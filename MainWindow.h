@@ -4,14 +4,11 @@
 #include <QWidget>
 #include <QMainWindow>
 
-#include "EnsembleIntersections.h"
-#include "ContourGenerator.h"
 #include "def.h"
 
 class MyMapWidget;
 class MyChartWidget;
 class MyFieldWidget;
-class MeteModel;
 
 class DisplayCtrlWidget;
 
@@ -45,9 +42,7 @@ private:		// widget
 	DisplayCtrlWidget * _pDisplayCtrlWidget;
 
 
-private:		// model
-	// used model
-	MeteModel* _pModel=NULL;
+
 private:
 	void createSceneAndView();
 	void createActions();

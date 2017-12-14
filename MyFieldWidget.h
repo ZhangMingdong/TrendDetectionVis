@@ -2,9 +2,6 @@
 
 
 #include "def.h"
-#include "ContourGenerator.h"
-#include "EnsembleIntersections.h"
-#include "GLFont.h"
 
 #include "MyGLWidget.h"
 #include "Field2D.h"
@@ -12,7 +9,6 @@
 #include<vector>
 #include<unordered_map>
 
-class MeteModel;
 
 
 class MyFieldWidget : public MyGLWidget
@@ -22,10 +18,9 @@ public:
 	MyFieldWidget(QWidget *parent = 0);
 	~MyFieldWidget();
 protected:
-	MeteModel* _pModelE = NULL;
 	int _nCurrentGroup = 0;
 public:
-	void SetModelE(MeteModel* pModelE);
+	void SetModelE();
 protected:
 	// paint the content
 	virtual void paint();

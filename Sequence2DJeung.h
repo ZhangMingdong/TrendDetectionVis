@@ -21,6 +21,8 @@ protected:
 	void groupTimeSteps();
 	// detect trends based on the groups
 	void trendDetectBasedOnGroups();
+	// using CMC algorithm to calculate the groups
+	void CMCAlgorithm();
 protected:
 	// cluster at each timestep, only contain clusters larger than M
 	std::vector<std::vector<std::set<int>>> _vecClusters;

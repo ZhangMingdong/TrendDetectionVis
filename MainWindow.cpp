@@ -15,12 +15,11 @@
 #include "MainWindow.h"
 #include "MyChartWidget.h"
 #include "MyFieldWidget.h"
-#include "MeteModel.h"
 
 #include "DisplayCtrlWidget.h"
 
 // using field if defined, otherwise use sequence
-#define FIELD_2D
+//#define FIELD_2D
 
 
 
@@ -42,17 +41,13 @@ const QString ShowBeliefEllipse("ShowBeliefEllipse");
 
 
 MainWindow::~MainWindow(){
-	if (_pModel) delete _pModel;
 }
 
 MainWindow::MainWindow()
 {
-
-
 	// finished read config file
 	setWindowState(Qt::WindowMaximized);
 
-	_pModel = MeteModel::CreateModel();
 
 	createSceneAndView();
 	createActions();
@@ -96,7 +91,7 @@ void MainWindow::createSceneAndView(){
 	splitter->addWidget(_viewField);
 #else
 	_viewChart = new MyChartWidget;
-	_viewChart->SetModelE(_pModel);
+	_viewChart->SetModelE();
 	splitter->addWidget(_viewChart);
 #endif
 

@@ -67,24 +67,9 @@ namespace FIELD2D {
 		std::vector<Group> _vecGroups;
 		// trend detecting parameters
 		double _dbEpsilon = 0;
-		//	int _nM = 2;
-		//	int _nDelta = 5;
-
-		//	int _nM = 1;
-		//	int _nDelta = 1;
-
-		// int _nM = 1;
-		// int _nDelta = 1;
-
-
 		int _nM = 3;
 		int _nDelta = 10;
-
-		// hashtable of calculated trends
-		std::unordered_map<unsigned long, std::vector<int> > _hashTrends;
 	public:
-		// add Field
-		void AddField(std::vector<double> seq);
 		// initialization
 		void Init(std::vector<std::vector<std::vector<IndexAndValue>>> vectOrderedIndex, double dbEpsilon,int nM,int nDelta);
 		int GetGroupSize();
