@@ -8,6 +8,7 @@
 
 class MyMapWidget;
 class MyChartWidget;
+class MyChartWidgetNew;
 class MyFieldWidget;
 
 class DisplayCtrlWidget;
@@ -38,6 +39,7 @@ private:	// action
 private:		// widget
 	MyFieldWidget *_viewField;
 	MyChartWidget *_viewChart;
+	MyChartWidgetNew *_viewChartNew;
 	// control widget
 	DisplayCtrlWidget * _pDisplayCtrlWidget;
 

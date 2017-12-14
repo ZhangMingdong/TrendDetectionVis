@@ -15,6 +15,7 @@
 #include "MainWindow.h"
 #include "MyChartWidget.h"
 #include "MyFieldWidget.h"
+#include "MyChartWidgetNew.h"
 
 #include "DisplayCtrlWidget.h"
 
@@ -90,9 +91,19 @@ void MainWindow::createSceneAndView(){
 	_viewField->SetModelE(_pModel);
 	splitter->addWidget(_viewField);
 #else
-	_viewChart = new MyChartWidget;
-	_viewChart->SetModelE();
-	splitter->addWidget(_viewChart);
+	bool bNewChart = true;
+	if (bNewChart) {
+		_viewChartNew = new MyChartWidgetNew;
+		_viewChartNew->SetModelE();
+		splitter->addWidget(_viewChartNew);
+
+	}
+	else {
+		_viewChart = new MyChartWidget;
+		_viewChart->SetModelE();
+		splitter->addWidget(_viewChart);
+
+	}
 #endif
 
 	setCentralWidget(splitter);

@@ -12,12 +12,12 @@
 
 class Sequence2D;
 
-class MyChartWidget : public MyGLWidget
+class MyChartWidgetNew : public MyGLWidget
 {
 	Q_OBJECT
 public:
-	MyChartWidget(QWidget *parent = 0);
-	~MyChartWidget();
+	MyChartWidgetNew(QWidget *parent = 0);
+	~MyChartWidgetNew();
 protected:
 	Sequence2D* _pSequence = NULL;	
 	int _nCurrentGroup = 0;
@@ -58,6 +58,16 @@ protected:
 	// data set to show the duplicate candidate
 	// 2017/12/08
 	void generateSequenceArtificial4();
+
+protected:
+	struct Sequence
+	{
+		std::string _strName;
+		std::vector<DPoint2> _vecPoints;
+	};
+	std::vector<Sequence> _vecAgriculture;
+	std::vector<Sequence> _vecIndustry;
+	int _nLen = 0;
 
 };
 

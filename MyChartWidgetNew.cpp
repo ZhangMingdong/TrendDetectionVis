@@ -1,4 +1,4 @@
-#include "mychartwidget.h"
+#include "MyChartWidgetNew.h"
 #include <gl/GLU.h>
 
 
@@ -34,7 +34,7 @@ const double g_dbScaleH = .05;
 using namespace std;
 
 
-MyChartWidget::MyChartWidget(QWidget *parent)
+MyChartWidgetNew::MyChartWidgetNew(QWidget *parent)
 	: MyGLWidget(parent)
 {
 //	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Buchin);
@@ -42,24 +42,24 @@ MyChartWidget::MyChartWidget(QWidget *parent)
 	_pSequence = Sequence2D::GenerateInstance(Sequence2D::ST_Jeung);
 }
 
-MyChartWidget::~MyChartWidget()
+MyChartWidgetNew::~MyChartWidgetNew()
 {
 	delete _pSequence;
 }
 
-void MyChartWidget::paint() {
+void MyChartWidgetNew::paint() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glLineWidth(1.0f);
-	glColor3f(1.0, 0, 0);
 
 	glPushMatrix();
 
-	double dbMin = _pSequence->GetMin();
-	double dbMax = _pSequence->GetMax();
-	int nLen = _pSequence->GetLength();
+//	double dbMin = _pSequence->GetMin();
+//	double dbMax = _pSequence->GetMax();
+//	int nLen = _pSequence->GetLength();
+
 	glScaled(g_dbScaleW, g_dbScaleH, 1);
-	glTranslatef(-nLen / 2.0, -(dbMin+dbMax) / 2.0, 0);
+	glTranslatef(-_nLen / 2.0, -50.0, 0);
 
 	// draw spaghetti
 	drawSpaghetti();
@@ -72,20 +72,20 @@ void MyChartWidget::paint() {
 //	drawSelectedDBGroup();
 
 	// draww abstracted groups
-	drawGroups();
-	drawDBGroups();
+//	drawGroups();
+//	drawDBGroups();
 
 	// draw the event line
-	drawEvents();
+//	drawEvents();
 
 	glPopMatrix();
 }
 
-void MyChartWidget::init() {
+void MyChartWidgetNew::init() {
 
 }
 
-void MyChartWidget::SetModelE() {	
+void MyChartWidgetNew::SetModelE() {
 #ifdef USE_ARTIFICIAL
 //	generateSequenceArtificial1();
 //	generateSequenceArtificial2();
@@ -109,7 +109,7 @@ void MyChartWidget::SetModelE() {
 //	_pSequence->TrendDetect();
 }
 
-void MyChartWidget::mouseDoubleClickEvent(QMouseEvent *event) {
+void MyChartWidgetNew::mouseDoubleClickEvent(QMouseEvent *event) {
 	_nCurrentGroup++;
 	if (_pSequence->GetGroupSize())
 	{
@@ -121,7 +121,7 @@ void MyChartWidget::mouseDoubleClickEvent(QMouseEvent *event) {
 	updateGL();
 }
 
-void MyChartWidget::drawGroups() {
+void MyChartWidgetNew::drawGroups() {
 	for (size_t i = 0; i < _pSequence->GetGroupSize(); i++)
 	{
 		Group g = _pSequence->GetGroup(i);
@@ -144,7 +144,7 @@ void MyChartWidget::drawGroups() {
 	}
 }
 
-void MyChartWidget::drawSelectedGroup() {
+void MyChartWidgetNew::drawSelectedGroup() {
 	if (_pSequence->GetGroupSize() == 0) return;
 	glColor3f(0, 1, 0);
 	glLineWidth(2.0f);
@@ -161,56 +161,79 @@ void MyChartWidget::drawSelectedGroup() {
 	}
 }
 
-void MyChartWidget::drawGridLines() {
-	int nLen = _pSequence->GetLength();
-	double dbMin = _pSequence->GetMin();
-	double dbMax = _pSequence->GetMax();
-	double dbEpsilon = _pSequence->GetEpsilon();
-
-	glColor4f(0, 0, 1,.3);
-	glBegin(GL_LINES);
-
-	// horizontal lines
-	double dbY = dbMin;
-	while (dbY<dbMax+.01)
-	{
-		glVertex2d(0, dbY);
-		glVertex2d(nLen - 1, dbY);
-
-		dbY += dbEpsilon;
-	}
+void MyChartWidgetNew::drawGridLines() {
 	
-	// vertical lines
-	for (size_t i = 0; i < nLen; i += 10)
+
+	// border
+	glColor4f(0, 0, 1, .3);
+	glBegin(GL_LINE_LOOP);
+	glVertex2d(0, 0);
+	glVertex2d(_nLen - 1, 0);
+	glVertex2d(_nLen - 1, 100);
+	glVertex2d(0, 100);
+	glEnd();
+
+
+	glColor4f(0, 0, 0, .2);
+	glBegin(GL_LINES);
+	// horizontal lines
+	for (size_t i = 0; i <= 100; i += 10)
 	{
-		glVertex2d(i, _pSequence->GetMin());
-		glVertex2d(i, _pSequence->GetMax());
+		glVertex2d(0, i);
+		glVertex2d(_nLen-1, i);
+
 	}
-	glColor4f(0, 0, 0,.2);
 	// vertical lines
-	for (size_t i = 0; i < nLen; i ++)
+	for (size_t i = 0; i < _nLen; i ++)
 	{
-		glVertex2d(i, _pSequence->GetMin());
-		glVertex2d(i, _pSequence->GetMax());
+		glVertex2d(i, 0);
+		glVertex2d(i, 100);
 	}
 	glEnd();
 }
 
-void MyChartWidget::drawSpaghetti() {
-	int nEns = _pSequence->GetEns();
-	int nLen = _pSequence->GetLength();
+void MyChartWidgetNew::drawSpaghetti() {
+	glColor4f(1.0, 0, 0,.5);
+	int nEns = _vecAgriculture.size();
 	for (size_t i = 0; i < nEns; i++)
 	{
 		glBegin(GL_LINE_STRIP);
-		for (size_t j = 0; j < nLen; j++)
+		int nLen = _vecAgriculture[i]._vecPoints.size();
+		glVertex3f(_vecAgriculture[i]._vecPoints[0].x, _vecAgriculture[i]._vecPoints[0].y,0);
+		for (size_t j = 1; j < nLen; j++)
 		{
-			glVertex3f(j, _pSequence->GetValue(i, j), 0);
+			if (_vecAgriculture[i]._vecPoints[j].x - _vecAgriculture[i]._vecPoints[j - 1].x>1.1)
+			{
+				glEnd();
+				glBegin(GL_LINE_STRIP);
+			}
+			glVertex3f(_vecAgriculture[i]._vecPoints[j].x, _vecAgriculture[i]._vecPoints[j].y, 0);
+		}
+		glEnd();
+	}
+
+	// industry
+	glColor4f(0, 0, 1.0,.5);
+	nEns = _vecIndustry.size();
+	for (size_t i = 0; i < nEns; i++)
+	{
+		glBegin(GL_LINE_STRIP);
+		int nLen = _vecIndustry[i]._vecPoints.size();
+		glVertex3f(_vecIndustry[i]._vecPoints[0].x, _vecIndustry[i]._vecPoints[0].y, 0);
+		for (size_t j = 1; j < nLen; j++)
+		{
+			if (_vecIndustry[i]._vecPoints[j].x - _vecIndustry[i]._vecPoints[j - 1].x>1.1)
+			{
+				glEnd();
+				glBegin(GL_LINE_STRIP);
+			}
+			glVertex3f(_vecIndustry[i]._vecPoints[j].x, _vecIndustry[i]._vecPoints[j].y, 0);
 		}
 		glEnd();
 	}
 }
 
-void MyChartWidget::drawDBGroups() {
+void MyChartWidgetNew::drawDBGroups() {
 	for (size_t i = 0; i < _pSequence->GetDBGroupSize(); i++)
 	{
 		DBGroup g = _pSequence->GetDBGroup(i);
@@ -278,7 +301,7 @@ void MyChartWidget::drawDBGroups() {
 	}
 }
 
-void MyChartWidget::drawSelectedDBGroup() {
+void MyChartWidgetNew::drawSelectedDBGroup() {
 	if (_pSequence->GetDBGroupSize() == 0) return;
 	glColor3f(0, 1, 0);
 	glLineWidth(2.0f);
@@ -317,74 +340,66 @@ void MyChartWidget::drawSelectedDBGroup() {
 }
 
 //#define ALL_LINES
-void MyChartWidget::generateEnsembleSequences() {
+void MyChartWidgetNew::generateEnsembleSequences() {
 
 }
 
-void MyChartWidget::generateGDPSequences() {
-	// use gdp data
-	//QFile file("data\\Industry (p of GDP).csv"); 
-	QFile file("data\\Agriculture (p of GDP).csv");
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+void MyChartWidgetNew::generateGDPSequences() {
+	// agriculture
 	{
-		return;
-	}
-	QTextStream in(&file);
-	QString line = in.readLine();
-	vector<vector<double>> vecData;
-	while (!line.isNull())
-	{
-		vector<double> seq;
-		QStringList list = line.split(",");
-		for (size_t i = 0, length = list.size() - 1; i < length; i++)
+		QFile file("data\\Agriculture (p of GDP).csv");
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		{
-			if (list[i].isEmpty()) seq.push_back(-1);
-			else seq.push_back(list[i].toDouble());
+			return;
 		}
-		vecData.push_back(seq);
-		line = in.readLine();
-	}
 
-
-	int nLen = vecData[0].size();
-	int nEns = vecData.size();
-
-	for (int i = nEns-1; i >=0 ; i--)
-	{
-		int nFirstValidIndex = -1;
-		int nValidCount = 0;
-		for (size_t j = 0; j < nLen; j++)
+		QTextStream in(&file);
+		QString line = in.readLine();
+		while (!line.isNull())
 		{
-			double dbValue = vecData[i][j];
-			if (dbValue>0)
+			Sequence s;
+			QStringList list = line.split(",");
+			int nLen = list.size();
+			if (nLen > _nLen)_nLen = nLen;
+			for (size_t i = 0; i < nLen; i++)
 			{
-				nValidCount++;
-				if (nFirstValidIndex < 0) nFirstValidIndex = j;
+				if (!list[i].isEmpty())
+					s._vecPoints.push_back(DPoint2(i, list[i].toDouble()));
 			}
-			else if(nFirstValidIndex>-1)
-				vecData[i][j] = vecData[i][j - 1];
-		}
-		if (nValidCount < 45)
-			vecData.erase(vecData.begin() + i); // remove the sequence with no valide data
-		else {
-			for (size_t j = 0; j < nFirstValidIndex; j++)
-			{
-				vecData[i][j] = vecData[i][nFirstValidIndex];
-			}
+			if (!s._vecPoints.empty())
+				_vecAgriculture.push_back(s);
+			line = in.readLine();
 		}
 	}
-	nEns = vecData.size();
-	cout << "number of sequences: " << nEns << endl;
 
+	{
+		QFile file("data\\Industry (p of GDP).csv");
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+		{
+			return;
+		}
 
-	double dbEpsilon = 1.0;
-	double nDelta = 2;
-	double nM = 2;
-	_pSequence->Init(vecData,dbEpsilon,nDelta,nM);
-
+		QTextStream in(&file);
+		QString line = in.readLine();
+		while (!line.isNull())
+		{
+			Sequence s;
+			QStringList list = line.split(",");
+			int nLen = list.size();
+			if (nLen > _nLen)_nLen = nLen;
+			for (size_t i = 0; i < nLen; i++)
+			{
+				if (!list[i].isEmpty())
+					s._vecPoints.push_back(DPoint2(i, list[i].toDouble()));
+			}
+			if (!s._vecPoints.empty())
+				_vecIndustry.push_back(s);
+			line = in.readLine();
+		}
+	}
 }
 
-void MyChartWidget::generateSequenceArtificial1() {
+void MyChartWidgetNew::generateSequenceArtificial1() {
 	double arrData[4][8] = {
 		{0.1,0.1,0.1,0.1,1.1,1.1,1.1,1.1 },
 		{0.2,0.2,2.2,2.2,2.2,2.2,2.2,2.2 },
@@ -412,7 +427,7 @@ void MyChartWidget::generateSequenceArtificial1() {
 	_pSequence->Init(vecSequence, dbEpsilon, nDelta, nM);
 }
 
-void MyChartWidget::generateSequenceArtificial2() {
+void MyChartWidgetNew::generateSequenceArtificial2() {
 	double arrData[5][8] = {
 		{ 0.01,0.01,0.01,0.01,1.01,1.01,1.01,1.01 },
 		{ 0.02,0.02,2.02,2.02,2.02,2.02,2.02,2.02 },
@@ -443,7 +458,7 @@ void MyChartWidget::generateSequenceArtificial2() {
 	_pSequence->Init(vecSequence, dbEpsilon, nDelta, nM);
 }
 
-void MyChartWidget::generateSequenceArtificial3() {
+void MyChartWidgetNew::generateSequenceArtificial3() {
 
 	double arrData[10][20];
 
@@ -501,7 +516,7 @@ void MyChartWidget::generateSequenceArtificial3() {
 
 }
 
-void MyChartWidget::generateSequenceArtificial4() {
+void MyChartWidgetNew::generateSequenceArtificial4() {
 	double arrData[3][4] = {
 		{ 0.1,0.1,0.1,0.1},
 		{ 0.2,0.2,0.2,0.2},
@@ -528,7 +543,7 @@ void MyChartWidget::generateSequenceArtificial4() {
 	_pSequence->Init(vecSequence, dbEpsilon, nDelta, nM);
 }
 
-void MyChartWidget::drawEvents() {
+void MyChartWidgetNew::drawEvents() {
 	glBegin(GL_LINES);
 	vector<DBEpsilonEvent> vecEvents = _pSequence->GetEvents();
 	for (DBEpsilonEvent evt : vecEvents) {
